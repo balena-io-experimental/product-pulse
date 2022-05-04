@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Container, Divider, Txt, Box, Flex } from 'rendition';
+import { Input, Container, Divider, Txt, Flex } from 'rendition';
 import { useDebounce } from 'use-debounce';
 
 import Header from './Header';
 import ProductCard from './ProductCard';
-import { isGitHubUri } from '../validation';
-import * as Github from '../github';
 import { INVALID_URI, URI_DOES_NOT_EXIST } from '../errors';
 import { getModel } from '../model';
 
@@ -88,6 +86,10 @@ const App = () => {
         ) {
             return;
         }
+
+        fetch('/api')
+            .then(resp => resp.text())
+            .then(console.log);
 
         return;
 

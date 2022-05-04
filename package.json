@@ -4,7 +4,9 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "touch $INIT_CWD/.env",
+    "postinstall": "cd api && npm i && touch $INIT_CWD/api/.env",
+    "server": "cd api && npm run start",
+    "build": "webpack build",
     "dev": "webpack serve"
   },
   "repository": {
@@ -27,20 +29,16 @@
   "devDependencies": {
     "@babel/core": "^7.17.10",
     "@babel/plugin-transform-runtime": "^7.17.10",
+    "@babel/polyfill": "^7.12.1",
     "@babel/preset-env": "^7.17.10",
     "@babel/preset-react": "^7.16.7",
     "babel-loader": "^8.2.5",
-    "dotenv-webpack": "^7.1.0",
     "html-webpack-plugin": "^5.5.0",
     "webpack": "^5.72.0",
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.8.1"
   },
   "dependencies": {
-    "@octokit/plugin-paginate-rest": "^2.17.0",
-    "@octokit/plugin-throttling": "^3.6.2",
-    "@octokit/rest": "^18.12.0",
-    "dotenv": "^16.0.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-icons": "^4.3.1",
