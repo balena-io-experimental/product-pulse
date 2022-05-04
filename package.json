@@ -4,6 +4,7 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "touch $INIT_CWD/.env",
     "dev": "webpack serve"
   },
   "repository": {
@@ -25,18 +26,24 @@
   ],
   "devDependencies": {
     "@babel/core": "^7.17.10",
+    "@babel/plugin-transform-runtime": "^7.17.10",
     "@babel/preset-env": "^7.17.10",
     "@babel/preset-react": "^7.16.7",
     "babel-loader": "^8.2.5",
+    "dotenv-webpack": "^7.1.0",
     "html-webpack-plugin": "^5.5.0",
     "webpack": "^5.72.0",
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.8.1"
   },
   "dependencies": {
+    "@octokit/plugin-throttling": "^3.6.2",
+    "@octokit/rest": "^18.12.0",
+    "dotenv": "^16.0.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "rendition": "^27.1.1",
-    "status-indicator": "^1.0.9"
+    "status-indicator": "^1.0.9",
+    "use-debounce": "^8.0.0"
   }
 }

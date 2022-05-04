@@ -1,0 +1,17 @@
+{
+    "https://github.com/balena-os/balena-supervisor": {
+        "directed": "green",
+        "maintained": "green",
+        "issues": "yellow"
+    },
+    "https://github.com/balena-io/balena-ui": {
+        "directed": "yellow",
+        "maintained": "green",
+        "issues": "green"
+    },
+    "https://github.com/balena-os/balena-edison": {
+        "directed": "red",
+        "maintained": "red",
+        "issues": "red"
+    }
+}
