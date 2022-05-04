@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Container, Divider, Txt, Box } from 'rendition';
+import { Input, Container, Divider, Txt, Box, Flex } from 'rendition';
 import { useDebounce } from 'use-debounce';
 
 import Header from './Header';
@@ -8,6 +8,7 @@ import { isGitHubUri } from '../validation';
 import * as Github from '../github';
 import { INVALID_URI, URI_DOES_NOT_EXIST } from '../errors';
 import { getNMonthsAgo } from '../utils';
+import { getModel } from '../model';
 
 const App = () => {
     /**
@@ -18,6 +19,7 @@ const App = () => {
     const [uri] = useDebounce(input, 1000);
     const [ownerAndRepo, setOwnerAndRepo] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
+    const [model, setModel] = useState(null);
 
     /**
      * HOOKS
@@ -50,6 +52,13 @@ const App = () => {
         return true;
     }
 
+    const onClose = async () => {
+        setInput('');
+        setOwnerAndRepo(null);
+        setErrorMessage('');
+        setModel(null);
+    }
+
     useEffect(() => {
         if (!uri) {
             return;
@@ -76,6 +85,7 @@ const App = () => {
         .then(([issuesAllTime, issuesLastMonth, pullRequestsLastMonth]) => {
             // TODO: do something with data
             console.log({ issuesAllTime, issuesLastMonth, pullRequestsLastMonth });
+            setModel(getModel(issuesAllTime, issuesLastMonth, pullRequestsLastMonth));
         })
         .catch(console.error);
 
@@ -107,13 +117,18 @@ const App = () => {
                 <Txt color={'red'} height={'1.5em'}>{errorMessage}</Txt>
             </Container>
             <Divider mt={'1em'} pb={'1em'} />
-            <Container mt={'2em'}>
-                <ProductCard 
-                    directed={'red'}
-                    maintained={'green'}
-                    issues={'yellow'}
-                />
-            </Container>
+            {model && <Container mt={'2em'}>
+                <Flex justifyContent='center'>
+                    <ProductCard 
+                        owner={ownerAndRepo[0]}
+                        repo={ownerAndRepo[1]}
+                        directed={model.directed}
+                        maintained={model.maintained}
+                        issues={model.issues}
+                        onClose={onClose}
+                    />
+                </Flex>
+            </Container>}
         </Container>
     );
 }
