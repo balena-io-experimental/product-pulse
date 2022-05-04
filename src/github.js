@@ -1,14 +1,32 @@
 import { Octokit } from '@octokit/rest';
 // This is imported to throttle requests, but isn't used directly - see plugin-throttling docs for example
 import { throttling } from '@octokit/plugin-throttling';
+import { paginateRest } from '@octokit/plugin-paginate-rest';
 
 import * as validation from './validation';
+import { getNMonthsAgo } from './utils';
+
+// All query results should return newer than MOUNTS_COUNT months
+// to not include outdated GitHub stats.
+const MONTHS_COUNT = 3;
+
+// Exclude bots from contributor calculations
+const GH_BOTS = process.env.GH_BOTS || ['balena-ci', 'renovate-bot'];
+
+// A set of options to pass to Octokit instance when you only 
+// care about the count of the results, to speed up query.
+const COUNT_OPTIONS = { per_page: 1 };
+
+// TODO: memoizee (would only help in production where webpack-dev-server
+// doesn't hot-reload the page with every change)
+const memo = {};
 
 /**
  * Setup GitHub REST API client
  */
-const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN,
+const MyOctokit = Octokit.plugin(paginateRest);
+const octokit = new MyOctokit({
+    auth: `${process.env.GITHUB_TOKEN}`,
     userAgent: 'ProcessPulse v1.0.0',
     throttle: {
         onRateLimit: (retryAfter, options) => {
@@ -37,7 +55,7 @@ const octokit = new Octokit({
  * @param {string} gitHubUri 
  * @returns {Array[string, string]}
  */
- export const getOwnerAndRepo = (gitHubUri) => {
+export const getOwnerAndRepo = (gitHubUri) => {
     if (!validation.isGitHubUri(gitHubUri)) {
         return;
     }
@@ -62,7 +80,15 @@ export const isAccessibleRepo = async (owner, repo) => {
             owner,
             repo
         });
-        return response.status === 200;
+        const isAccessible = response.status === 200;
+
+        if (isAccessible) {
+            const { data } = response;
+            memo[data.full_name] = data;
+            console.log(memo);
+        }
+
+        return isAccessible;
     } catch (e) {
         return false;
     }
@@ -72,60 +98,135 @@ export const isAccessibleRepo = async (owner, repo) => {
  * Given a GitHub owner and repo, return a count of issues categorized by open & closed.
  * @param {string} owner 
  * @param {string} repo
- * @param {string} [updated] YYYY-MM-DD format date to filter for issues updated newer than date.
- *                           Issues created newer than this date are also considered updated at this date.
+ * @param {string} type One of 'issue' or 'pr'
  * @returns {Object}: An object with 'closed' and 'open' keys and numeric values
  */
-export const getIssueCount = async (owner, repo, updated) => {
-    if (updated && !validation.isValidGitHubQueryDate(updated)) {
+const VALID_TYPES = ['issue', 'pr'];
+const getIssueOrPRCount = async (owner, repo, type) => {
+    if (!VALID_TYPES.includes(type)) {
+        console.error(`Expected one of ${VALID_TYPES.join(', ')} for type, got ${type}`);
         return;
     }
+    const date = getNMonthsAgo(MONTHS_COUNT);
 
     try {
-        const queryBase = `type:issue repo:${owner}/${repo}`;
-        // Minimize data fetched to speed up query
-        const optionsBase = { page: 0, per_page: 1 };
+        const queryBase = `type:${type} repo:${owner}/${repo} updated:>=${date}`;
+        const prQueryStrings = ['is:closed', 'is:open'];
+        const issueQueryStrings = ['is:closed', 'no:label'];
 
         const { data: { total_count: closed }} = await octokit.search.issuesAndPullRequests({
-            q: `${queryBase} is:closed${updated ? ` updated:>=${updated}` : ''}`,
-            ...optionsBase
+            q: `${queryBase} is:closed`,
+            ...COUNT_OPTIONS
         });
 
         const { data: { total_count: open }} = await octokit.search.issuesAndPullRequests({
-            q: `${queryBase} is:open${updated ? ` updated:>=${updated}` : ''}`,
-            ...optionsBase
+            q: `${queryBase} is:open`,
+            ...COUNT_OPTIONS
         });
 
         return { closed, open };
     } catch (e) {
-        console.error('Received error in getIssueCount: ', e);
+        console.error('Received error in getIssueOrPRCount: ', e);
         throw e;
     }
 }
 
-
-export const getPullRequestCount = async (owner, repo, updated) => {
-    if (updated && !validation.isValidGitHubQueryDate(updated)) {
-        return;
-    }
-
+/**
+ * Given a valid owner and repo, return star, fork, and watcher count
+ * @param {string} owner 
+ * @param {string} repo 
+ */
+const getRepoEngagementCount = async (owner, repo) => {
     try {
-        const queryBase = `type:pr repo:${owner}/${repo}`;
-        // Minimize data fetched to speed up query
-        const optionsBase = { page: 0, per_page: 1 };
-
-        const { data: { total_count: closed }} = await octokit.search.issuesAndPullRequests({
-            q: `${queryBase} is:closed${updated ? ` updated:>=${updated}` : ''}`,
-            ...optionsBase
-        });
-        const { data: { total_count: open }} = await octokit.search.issuesAndPullRequests({
-            q: `${queryBase} is:open${updated ? ` updated:>=${updated}` : ''}`,
-            ...optionsBase
+        const { data: { items } } = await octokit.search.repos({
+            q: `repo:${owner}/${repo} `,
+            ...COUNT_OPTIONS
         });
 
-        return { closed, open };
+        if (!items || !items.length) {
+            throw new Error(`Could not get engagement data for repo ${owner}/${repo}`);
+        }
+
+        const { forks_count, stargazers_count, watchers_count } = items[0];
+        return { forks_count, stargazers_count, watchers_count };
     } catch (e) {
-        console.error('Received error in getPullRequestCount: ', e);
+        console.error('Received error in getRepoEngagementCount: ', e);
         throw e;
     }
+}
+
+const getRemoveBotQueryStr = () => {
+    const queryArr = GH_BOTS.reduce((qArr, bot) => {
+        qArr.push(`NOT(author:${bot})`);
+        return qArr;
+    }, []);
+    return queryArr.join(' ');
+}
+
+const getCommitsForRepo = async (owner, repo) => {
+    const date = getNMonthsAgo(3);
+
+    try {
+        const data = await octokit.paginate(octokit.search.commits, {
+            q: `repo:${owner}/${repo} author-date:>=${date} merge:false ${getRemoveBotQueryStr()}`,
+            per_page: 100
+        });
+
+        console.log(data);
+
+        return data;
+    } catch (e) {
+        console.error('Received error in getCommitsForRepo: ', e);
+        throw e;
+    }
+}
+
+const getTopContributors = async (owner, repo) => {
+    try {
+        const rawCommits = await getCommitsForRepo(owner, repo);
+        const commitCount = rawCommits.length;
+
+        const commitsPerContributor = rawCommits
+            .map(({ author }) => author.login)
+            .reduce((countMap, login) => {
+                if (!countMap[login]) {
+                    countMap[login] = 1;
+                } else {
+                    countMap[login]++;
+                }
+                return countMap;
+            }, {});
+
+        const numContributors = Object.keys(commitsPerContributor).length;
+
+        const averageCommitCount = Math.floor(commitCount / numContributors);
+
+        const topContributors = commitsPerContributor
+            .filter(([, numCommits ]) => numCommits >= averageCommitCount)
+            .map(([ login ]) => login);
+
+        const otherContributors = commitsPerContributor
+            .filter(([, numCommits]) => numCommits < averageCommitCount)
+            .map(([ login ]) => login);
+
+        return { topContributors, otherContributors };
+    } catch (e) {
+        console.error('Received error in getTopContributors: ', e);
+        throw e;
+    }
+}
+
+const hasCommitInTimePeriod = async (owner, repo) => {
+// Check if memoized commit array is not empty
+}
+
+// issues open:closed ratio
+// issues label:nolabel ratio (where label was added)
+// repo has CONTRIBUTING.md
+// repo has ARCHITECTURE.md
+// PRs not made by topContributors
+// Commits not made by topContributors
+
+export const calculateModel = async (owner, repo) => {
+    // Do all calculations in here and store data in memo object whenever possible to avoid repeated requests
 }

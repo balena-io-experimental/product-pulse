@@ -7,7 +7,6 @@ import ProductCard from './ProductCard';
 import { isGitHubUri } from '../validation';
 import * as Github from '../github';
 import { INVALID_URI, URI_DOES_NOT_EXIST } from '../errors';
-import { getNMonthsAgo } from '../utils';
 import { getModel } from '../model';
 
 const App = () => {
@@ -43,7 +42,6 @@ const App = () => {
 
         let [owner, repo] = Github.getOwnerAndRepo(URI);
         // Check if accessible repo
-        // isAccessibleRepo won't throw (with current implementation) so no need to wrap in try/catch
         const isAccessible = await Github.isAccessibleRepo(owner, repo);
         if (!isAccessible) {
             setErrorMessage(URI_DOES_NOT_EXIST);
@@ -91,16 +89,15 @@ const App = () => {
             return;
         }
 
+        return;
+
         Promise.all([
-            Github.getIssueCount(...ownerAndRepo),
-            Github.getIssueCount(...ownerAndRepo, getNMonthsAgo(1)),
-            Github.getPullRequestCount(...ownerAndRepo, getNMonthsAgo(1))
+            Github.calculateModel(...ownerAndRepo)
         ])
-        .then(([issuesAllTime, issuesLastMonth, pullRequestsLastMonth]) => {
+        .then((data) => {
             // TODO: do something with data
-            console.log({ issuesAllTime, issuesLastMonth, pullRequestsLastMonth });
             const newModel = {...models};
-            newModel[keyToUpdate] = getModel(issuesAllTime, issuesLastMonth, pullRequestsLastMonth);
+            newModel[keyToUpdate] = getModel(data);
             setModels(newModel);
         })
         .catch(console.error);
@@ -112,7 +109,7 @@ const App = () => {
      * JSX
      */
     return (
-        <Container>
+        <Container width={'50%'}>
             <Header />
             <Container>
                 <label 
