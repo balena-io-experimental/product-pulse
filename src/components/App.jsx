@@ -17,9 +17,12 @@ const App = () => {
     const [input, setInput] = useState('');
     // Only validate and search after change events stop firing on input
     const [uri] = useDebounce(input, 1000);
-    const [ownerAndRepo, setOwnerAndRepo] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
-    const [model, setModel] = useState(null);
+
+    const [ownersAndRepos, setOwnersAndRepos] = useState([]);
+    const [models, setModels] = useState({});
+
+    const [keyToUpdate, setKeyToUpdate] = useState('');
 
     /**
      * HOOKS
@@ -48,15 +51,22 @@ const App = () => {
         }
 
         setErrorMessage('');
-        setOwnerAndRepo([owner, repo]);
+        setOwnersAndRepos([...ownersAndRepos, [owner, repo]]);
+        setKeyToUpdate(`${owner}/${repo}`);
         return true;
     }
 
-    const onClose = async () => {
-        setInput('');
-        setOwnerAndRepo(null);
-        setErrorMessage('');
-        setModel(null);
+    const onClose = (key) => {
+        setKeyToUpdate(null);
+
+        setOwnersAndRepos(ownersAndRepos.filter(
+            ownerAndRepo => `${ownerAndRepo[0]}/${ownerAndRepo[1]}` !== key
+        ));
+        const newModel = {...models};
+        delete newModel[key];
+        console.log(newModel);
+        setModels(newModel);
+
     }
 
     useEffect(() => {
@@ -68,6 +78,10 @@ const App = () => {
     }, [uri]);
 
     useEffect(() => {
+        const ownerAndRepo = ownersAndRepos.find(
+            ownerAndRepo => `${ownerAndRepo[0]}/${ownerAndRepo[1]}` === keyToUpdate
+        );
+
         if (
             !Array.isArray(ownerAndRepo) || 
             ownerAndRepo.length !== 2 || 
@@ -85,11 +99,13 @@ const App = () => {
         .then(([issuesAllTime, issuesLastMonth, pullRequestsLastMonth]) => {
             // TODO: do something with data
             console.log({ issuesAllTime, issuesLastMonth, pullRequestsLastMonth });
-            setModel(getModel(issuesAllTime, issuesLastMonth, pullRequestsLastMonth));
+            const newModel = {...models};
+            newModel[keyToUpdate] = getModel(issuesAllTime, issuesLastMonth, pullRequestsLastMonth);
+            setModels(newModel);
         })
         .catch(console.error);
 
-    }, [ownerAndRepo]);
+    }, [keyToUpdate]);
 
 
     /**
@@ -117,16 +133,24 @@ const App = () => {
                 <Txt color={'red'} height={'1.5em'}>{errorMessage}</Txt>
             </Container>
             <Divider mt={'1em'} pb={'1em'} />
-            {model && <Container mt={'2em'}>
-                <Flex justifyContent='center'>
-                    <ProductCard 
-                        owner={ownerAndRepo[0]}
-                        repo={ownerAndRepo[1]}
-                        directed={model.directed}
-                        maintained={model.maintained}
-                        issues={model.issues}
-                        onClose={onClose}
-                    />
+            {models && <Container mt={'2em'}>
+                <Flex alignItems='center' flexDirection='column'>
+                    {Object.entries(models).map(([key, model], idx) => {
+
+                        const owner = key.split('/')[0];
+                        const repo = key.split('/')[1];
+
+                        return (
+                        <ProductCard
+                            key={idx}
+                            owner={owner}
+                            repo={repo}
+                            directed={model.directed}
+                            maintained={model.maintained}
+                            issues={model.issues}
+                            onClose={() => onClose(key)}
+                        />);
+                    })}
                 </Flex>
             </Container>}
         </Container>

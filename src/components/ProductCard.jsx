@@ -94,6 +94,7 @@ const CardFooter = ({ repoHandler }) => (
             width:400,
             borderBottomRightRadius: 5,
             borderBottomLeftRadius: 5,
+            marginBottom: 10
     }}>
         <Flex>
             <AiFillGithub size={20} style={{paddingLeft: 10, paddingRight: 5}}/>
