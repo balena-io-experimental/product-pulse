@@ -3,6 +3,11 @@ import { Box, Button, Card, Divider, Flex, Heading, Txt } from 'rendition';
 
 import { AiFillGithub } from 'react-icons/ai';
 
+/**
+ * Map string color into hex
+ * @param {string} color
+ * @returns color as hex
+ */
 const mapColor = (color) => {
     if(color === 'red') {
         return '#ff4d4d';
@@ -13,8 +18,13 @@ const mapColor = (color) => {
     }
 }
 
-const generalStatusColor = (status) => {
-    const score = status.reduce((prev, cur) => {
+/**
+ * Gets the average color for a card
+ * @param {Array} colors
+ * @returns average color as hex
+ */
+const generalStatusColor = (colors) => {
+    const score = colors.reduce((prev, cur) => {
         if (cur === 'green') {
             return prev + 1;
         }
@@ -81,7 +91,9 @@ const CardFooter = ({ repoHandler }) => (
             border: '1px solid rgba(0, 0, 0, 0.07)',
             backgroundColor: 'rgba(239,239,239,255)',
             cursor: 'pointer',
-            width:400
+            width:400,
+            borderBottomRightRadius: 5,
+            borderBottomLeftRadius: 5,
     }}>
         <Flex>
             <AiFillGithub size={20} style={{paddingLeft: 10, paddingRight: 5}}/>
@@ -94,7 +106,9 @@ const CardTopDetail = ({ color }) => (
     <Box style={{
         height: 10,
         backgroundColor: color,
-        width:400
+        width:400,
+        borderTopRightRadius: 5,
+        borderTopLeftRadius: 5,
     }}/>
 )
 
