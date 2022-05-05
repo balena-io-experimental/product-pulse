@@ -142,15 +142,15 @@ const criteria4 = (issues, topContributors) => {
 
 exports.get = async (owner, repo) => {
     // Gather data from GitHub
-    const repo = await getRepo(owner, repo);
+    const repoData = await getRepo(owner, repo);
     const commits = await getCommits(owner, repo);
     const { topContributors } = utils.getCoreContributors(commits);
     const PRs = await getPRs(owner, repo);
     const issues = await getIssues(owner, repo);
     
     return {
-        crit1: criteria1(repo.stargazers_count, MIN_STARS),
-        crit2: criteria2(repo.forks_count, MIN_FORKS),
+        crit1: criteria1(repoData.stargazers_count, MIN_STARS),
+        crit2: criteria2(repoData.forks_count, MIN_FORKS),
         crit3: criteria3(commits, PRs, topContributors),
         crit4: criteria4(issues, topContributors),
     };
