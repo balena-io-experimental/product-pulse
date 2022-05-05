@@ -8,9 +8,17 @@
 - **Criteria can be adopted for low/no code products** making this inclusive of all types of technical projects.
 - **Integrate the Product Pulse data model with other non-repo services** like other project management solutions (Asana, Monday, etc.).
 
+## Usage and configuration
+
+![Image of tool](/docs/assets/example.png)
+
+Users can input their public GitHub repo into Product Pulse and get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
+
 ## Motivation
 
 Product Pulse is a data model that helps you map user and project data (like repo and project management activity) to a simple health check based on three scores: Direction, Maintenance, and Community. The vision for the Product Pulse data model is that it can interfaced with any custom interpretation. Our first exploration is tracking the health of GitHub repos. Other usage includes mapping the model to popular project management tools like Asana or Monday and interpreting its user signals accordingly.
+
+![data flow](/docs/assets/flow.svg)
 
 Our amazing team created Product Pulse as part of Hack Week May 2022 to help fellow product builders have a quick way to gauge the health of other products and projects they might want to use. Product builders can use Product Pulse to gauge the health of their products, but also see the health of others.
 
@@ -48,7 +56,6 @@ Here's a high-level look at our data model for Product Pulse. We made these crit
 * Criterion 3 (high): Has 3rd party contributions
 * Criterion 4 (high): Has users
 
-
 ### GitHub Interpreter
 For our GitHub Interpreter, we took the model and applied repo and user data sourced by the GitHub API. This is how each criteria will use data and determine health scores.
 
@@ -75,7 +82,7 @@ For our GitHub Interpreter, we took the model and applied repo and user data sou
 * Criterion 4: $X% of issues are created OR commented by user NOT in $U contributors
 * Criterion 4: Repo used by is greater than $X
 
-Get more detail about the modeling, criteria, and our GitHub interpreter in our [documentations](/docs).
+Get more detail about the modeling, criteria, and our GitHub interpreter in our [documentation](/docs).
 
 ## Future state / roadmap
 
@@ -86,19 +93,13 @@ We want offer a backend service that provides endpoints for:
 
 Please see our [documentation](/docs) for more details on our roadmap.
 
-## Usage and configuration
-
-![Image of tool](/docs/assets/example.png)
-
-Users can input their public GitHub repo into Product Pulse and get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
-
 ## Documentation
 
 Please see our documentation for more on:
 
-* [the Product Pulse data model and examples of interpreters](/docs/01-data-model.md)
-* [scoring and criteria definitions](/docs/02-github-interpreter.md)
-* [roadmap](/docs/03-roadmap.md)
+* [the Product Pulse data model and examples of interpreters](/docs/data-model)
+* [scoring and criteria definitions](/docs/github-interpreter)
+* [roadmap](/docs/roadmap)
 
 ## Contributing
 
