@@ -2,7 +2,9 @@ import React from 'react';
 import { Box, Button, Card, Divider, Flex, Heading, Txt } from 'rendition';
 
 import { AiFillGithub, AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
-import { Accordion, AccordionPanel } from 'grommet';
+import { Accordion, AccordionPanel, grommet } from 'grommet';
+import styled, { ThemeProvider } from 'styled-components';
+import { deepMerge } from 'grommet/utils';
 
 /**
  * Map string color into hex
@@ -145,6 +147,29 @@ const renderPanel = (direction, maintenance, community) => (
 const ProductCard = ({ owner, repo, model, onClose }) => {
   const { direction, maintenance, community } = model;
 
+  const theme = {
+    accordion: {
+      heading: {
+        level: 3,
+        margin: { vertical: '6px', horizontal: '24px' },
+      },
+      hover: {
+        heading: {
+          color: 'accent-2',
+        },
+      },
+      icons: {
+        collapse: undefined,
+        expand: undefined,
+        color: 'transparent',
+      },
+      border: undefined,
+      panel: {
+        border: undefined,
+      },
+    },
+  };
+
   return (
     <Flex flexDirection='column'>
       <CardTopDetail
@@ -154,24 +179,28 @@ const ProductCard = ({ owner, repo, model, onClose }) => {
       <Box width={500} fontSize={2} style={cardStyle}>
         <CardHeader title={repo} onClose={onClose} />
         <Accordion>
-          <AccordionPanel
-            header={renderPanel(direction, maintenance, community)}
-          >
-            <Flex flexDirection='row' style={{ margin: 15 }}>
-              <Checks
-                criterias={{
-                  contributors: false,
-                  reviewers: false,
-                  issues: true,
-                  commits: false,
-                }}
-              />
-              <Box style={{ width: 90 }} />
-              <Checks criterias={{ prs: true, tests: false, build: true }} />
-              <Box style={{ width: 140 }} />
-              <Checks criterias={{ forks: true, active: false, stars: true }} />
-            </Flex>
-          </AccordionPanel>
+          <ThemeProvider theme={theme}>
+            <AccordionPanel
+              header={renderPanel(direction, maintenance, community)}
+            >
+              <Flex flexDirection='row' style={{ margin: 15 }}>
+                <Checks
+                  criterias={{
+                    contributors: false,
+                    reviewers: false,
+                    issues: true,
+                    commits: false,
+                  }}
+                />
+                <Box style={{ width: 90 }} />
+                <Checks criterias={{ prs: true, tests: false, build: true }} />
+                <Box style={{ width: 140 }} />
+                <Checks
+                  criterias={{ forks: true, active: false, stars: true }}
+                />
+              </Flex>
+            </AccordionPanel>
+          </ThemeProvider>
         </Accordion>
       </Box>
       <CardFooter repoHandler={`${owner}/${repo}`} />
