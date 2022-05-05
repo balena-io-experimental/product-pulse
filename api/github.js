@@ -282,6 +282,39 @@ const getIssues = async (owner, repo, monthRange, filter) => {
   }
 }
 
+const getPRs = async (owner, repo) => {
+    const since = utils.getNMonthsAgo(MONTHS).toISOString();
+    try {
+        return await octokit.paginate(octokit.pulls.list, {
+            owner,
+            repo,
+            since,
+            sort: 'created',
+            per_page: 100
+        });
+    } catch (e) {
+        console.error('Received error in getPRsForRepo: ', e);
+        throw e;
+    }
+}
+
+const getRepo = async (owner, repo) => {
+    try {
+        const { data: { items } } = await octokit.search.repos({
+            q: `repo:${owner}/${repo} `,
+            ...COUNT_OPTIONS
+        });
+
+        if (!items || !items.length) {
+            throw new Error(`Could not get engagement data for repo ${owner}/${repo}`);
+        }
+        return items[0];
+    } catch (e) {
+        console.error('Received error in getRepo: ', e);
+        throw e;
+    }
+}
+
 module.exports = {
   isAccessibleRepo,
   fileExists,
@@ -295,4 +328,6 @@ module.exports = {
   getOwnerAndRepo,
   getRepoEngagementCount,
   getRemoveBotQueryStr,
+  getPRs, // might be duplicate of getPRsForRepo
+  getRepo,
 }
