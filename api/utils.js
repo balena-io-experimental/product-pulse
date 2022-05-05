@@ -40,20 +40,11 @@ const sortByAuthor = (commits) => {
 const getCoreContributors = (commits) => {
   const commitCount = commits.length;
 
-  const commitsPerContributor = commits
-      .map(({ author }) => author.login)
-      .reduce((countMap, login) => {
-          if (!countMap[login]) {
-              countMap[login] = 1;
-          } else {
-              countMap[login]++;
-          }
-          return countMap;
-      }, {});
+  const commitsPerContributor = sortByAuthor(commits);
 
   const numContributors = Object.keys(commitsPerContributor).length;
 
-  const thresholdCommitCount = Math.floor(commitCount / numContributors);
+  const thresholdCommitCount = Math.floor(commitCount / commitsPerContributor.size);
 
   const coreContributors = commitsPerContributor
       .filter(([, numCommits ]) => numCommits >= thresholdCommitCount)

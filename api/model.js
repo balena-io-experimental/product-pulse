@@ -13,7 +13,7 @@ exports.calculate = async (owner, repo) => {
   // Apply individual algorithms
   // const mData = await maintenance.get(owner, repo);
   // const dData = await direction.get(owner, repo);
-  // const cData = await community.get(owner, repo);
+  const cData = await community.get(owner, repo);
 
   return {
     maintenance: 0.05, // average the mData 

@@ -4,7 +4,6 @@ const { Octokit} = require('@octokit/rest');
 const { throttling } = require('@octokit/plugin-throttling');
 const { paginateRest } = require('@octokit/plugin-paginate-rest');
 const fetch = require('node-fetch');
-require('dotenv').config();
 
 const validation = require('./validation');
 const { getNMonthsAgo } = require('./utils');
@@ -186,40 +185,6 @@ const getPRsForRepo = async (owner, repo) => {
   }
 }
 
-const getTopContributors = async (commits) => {
-  try {
-    const commitCount = commits.length;
-
-    const commitsPerContributor = commits
-      .map(({ author }) => author.login)
-      .reduce((countMap, login) => {
-        if (!countMap[login]) {
-          countMap[login] = 1;
-        } else {
-          countMap[login]++;
-        }
-        return countMap;
-      }, {});
-
-    const numContributors = Object.keys(commitsPerContributor).length;
-
-    const averageCommitCount = Math.floor(commitCount / numContributors);
-
-    const topContributors = commitsPerContributor
-      .filter(([, numCommits ]) => numCommits >= averageCommitCount)
-      .map(([ login ]) => login);
-
-    const otherContributors = commitsPerContributor
-      .filter(([, numCommits]) => numCommits < averageCommitCount)
-      .map(([ login ]) => login);
-
-    return { topContributors, otherContributors };
-  } catch (e) {
-    console.error('Received error in getTopContributors: ', e);
-    throw e;
-  }
-}
-
 const getContributingFileSize = async (owner, repo) => {
   try {
     const {data} =  await octokit.repos.getContent({owner, repo, path: 'CONTRIBUTING.md'}); 
@@ -321,7 +286,6 @@ module.exports = {
   getIssues,
   getCommits,
   getContributingFileSize, // duplicate of fileExists
-  getTopContributors,
   getPRsForRepo,
   getIssueOrPRCount, // duplicate of getIssues
   getCommitsForRepo, // duplicate of getCommits
