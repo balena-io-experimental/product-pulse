@@ -54,7 +54,7 @@ exports.get = async (owner, repo) => {
     const pass = criterion2(issues, x);
     return {
       criterion: 'issues',
-      description: `Open to close issue ration is less than ${x}`,
+      description: `Open to close issue ratio is less than ${x}`,
       score: Number(pass),
       weight: 0.2,
       pass
