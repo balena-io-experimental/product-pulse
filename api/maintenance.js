@@ -64,7 +64,7 @@ exports.get = async (owner, repo) => {
   const c3 = (x) => {
     const pass = criterion3(issues, x);
     return {
-      criterion: 'organizatioin',
+      criterion: 'organization',
       description: `${Math.round(x*100)}% of issues have labels`,
       score: Number(pass),
       weight: 0.2,
@@ -94,10 +94,7 @@ exports.get = async (owner, repo) => {
     };
   };
 
-
   const details = [c1(1, 4), c2(0.5), c3(0.2), await c4(0.7), c5()]
-
-  // Open/closed issue ratio is less than X%
 
   return {
     score: details.map(c => c.score * c.weight).reduce((total, v) => total + v, 0),
