@@ -37,8 +37,15 @@ const sortByAuthor = (commits) => {
   return authors 
 }
 
+const getCoreContributors = (commits) => {
+  // TODO acually do this...
+  const authors = sortByAuthor(commits);
+  return ['20k-ultra', 'cywang117', 'pipex']
+}
+
 module.exports = {
   toGitHubQueryDate,
   getNMonthsAgo,
   sortByAuthor,
+  getCoreContributors,
 }

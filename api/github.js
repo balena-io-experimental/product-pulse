@@ -287,11 +287,11 @@ module.exports = {
   fileExists,
   getIssues,
   getCommits,
-  getContributingFileSize,
+  getContributingFileSize, // duplicate of fileExists
   getTopContributors,
   getPRsForRepo,
-  getIssueOrPRCount,
-  getCommitsForRepo,
+  getIssueOrPRCount, // duplicate of getIssues
+  getCommitsForRepo, // duplicate of getCommits
   getOwnerAndRepo,
   getRepoEngagementCount,
   getRemoveBotQueryStr,

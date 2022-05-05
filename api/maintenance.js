@@ -1,47 +1,7 @@
-require('dotenv').config()
-const { Octokit} = require('@octokit/rest');
-// This is imported to throttle requests, but isn't used directly - see plugin-throttling docs for example
-const { throttling } = require('@octokit/plugin-throttling');
-const { paginateRest } = require('@octokit/plugin-paginate-rest');
 const moment = require('moment');
 
 const github = require('./github');
 const utils = require('./utils');
-
-/**
- * Setup GitHub REST API client
- */
-const MyOctokit = Octokit.plugin(paginateRest);
-const octokit = new MyOctokit({
-  auth: `${process.env.GITHUB_TOKEN}`,
-  userAgent: 'ProcessPulse v1.0.0',
-  throttle: {
-    onRateLimit: (retryAfter, options) => {
-      octokit.log.warn(
-        `Request quota exhausted for request ${options.method} ${options.url}`
-      );
-      
-      // Retry twice after hitting a rate limit error, then give up.
-      // Don't retry with stale requests older than 5 seconds.
-      if (options.request.retryCount <= 2 && retryAfter <= 5) {
-        console.log(`Retrying after ${retryAfter} seconds!`);
-        return true;
-      }
-    },
-    onAbuseLimit: (_retryAfter, options) => {
-      // does not retry, only logs a warning
-      octokit.log.warn(
-        `Abuse detected for request ${options.method} ${options.url}`
-      );
-    }
-  }
-});
-
-function getCoreContributors(commits) {
-  // TODO acually do this...
-  const authors = utils.sortByAuthor(commits);
-  return ['20k-ultra', 'cywang117', 'pipex']
-}
 
 function criterion1(commits, x, w) {
   return commits.filter(commit => moment(commit.commit.author.date).isAfter(moment().subtract(w, 'weeks'))).length > x;
@@ -70,7 +30,7 @@ exports.get = async (owner, repo) => {
   const MONTHS = 3;
   const commits = await github.getCommitsForRepo(owner, repo, MONTHS);
   const issues = await github.getIssues(owner, repo, MONTHS);
-  const maintainers = getCoreContributors(commits);
+  const maintainers = utils.getCoreContributors(commits);
   const maintainersFilter = maintainers.reduce((f, m) => {
     f.push(`commenter:${m}`)
     return f;
