@@ -38,11 +38,69 @@ exports.get = async (owner, repo) => {
   const maintainerCommented = await github.getIssues(owner, repo, MONTHS, maintainersFilter);
   const archMdExists = await github.fileExists(owner, repo, 'ARCHITECTURE.md');
 
+  // Has had X commits in W weeks
+  const c1 = (x, w) => {
+    const pass = criterion1(commits, x, w);
+    return {
+      criterion: 'activity',
+      description: `Has had ${x} commits in the last ${w} weeks`,
+      score: Number(pass),
+      weight: 0.2,
+      pass
+    };
+  };
+
+  const c2 = (x) => {
+    const pass = criterion2(issues, x);
+    return {
+      criterion: 'issues',
+      description: `Open to close issue ration is less than ${x}`,
+      score: Number(pass),
+      weight: 0.2,
+      pass
+    };
+  };
+
+  const c3 = (x) => {
+    const pass = criterion3(issues, x);
+    return {
+      criterion: 'organizatioin',
+      description: `${Math.round(x*100)}% of issues have labels`,
+      score: Number(pass),
+      weight: 0.2,
+      pass
+    };
+  };
+
+  const c4 = async (x) => {
+    const pass = await criterion4(maintainerCommented, issues, x);
+    return {
+      criterion: 'communication',
+      description: `${x*100} of issues have responses from top contributors`,
+      score: Number(pass),
+      weight: 0.2,
+      pass
+    };
+  };
+
+  const c5 = () => {
+    const pass = criterion5(archMdExists);
+    return {
+      criterion: 'architecture',
+      description: `Contains an ARCHITECTURE.md`,
+      score: Number(pass),
+      weight: 0.2,
+      pass
+    };
+  };
+
+
+  const details = [c1(1, 4), c2(0.5), c3(0.2), await c4(0.7), c5()]
+
+  // Open/closed issue ratio is less than X%
+
   return {
-    crit1: criterion1(commits, 1, 4), // Has had X commits in W weeks
-    crit2: criterion2(issues, 0.5), // Open/closed issue ratio is less than X%
-    crit3: criterion3(issues, 0.2), // X% of issues have labels
-    crit4: await criterion4(maintainerCommented, issues, 0.7), // X% of issues have responses from C contributors
-    crit5: criterion5(archMdExists), // Contains an ARCHITECTURE.md
+    score: details.map(c => c.score * c.weight).reduce((total, v) => total + v, 0),
+    details
   };
 }

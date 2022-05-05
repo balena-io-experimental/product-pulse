@@ -16,6 +16,7 @@ exports.calculate = async (owner, repo) => {
   const cData = await community.get(owner, repo);
 
   return {
+    legend: [0.2, 0.6, 0.9],
     maintenance: 0.05, // average the mData 
     direction: 0.15, // average the dData
     community: 0.5, // average the cData
