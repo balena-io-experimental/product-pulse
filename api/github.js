@@ -11,7 +11,7 @@ const { getNMonthsAgo } = require('./utils');
 
 // All query results should return newer than MOUNTS_COUNT months
 // to not include outdated GitHub stats.
-const MONTHS_COUNT = 3;
+const MONTHS = 3;
 
 // Exclude bots from contributor calculations
 const GH_BOTS = process.env.GH_BOTS || ['balena-ci', 'renovate-bot'];
@@ -100,7 +100,7 @@ const getIssueOrPRCount = async (owner, repo, type) => {
         console.error(`Expected one of ${VALID_TYPES.join(', ')} for type, got ${type}`);
         return;
     }
-    const date = getNMonthsAgo(MONTHS_COUNT);
+    const date = getNMonthsAgo(MONTHS);
 
     try {
         const queryBase = `type:${type} repo:${owner}/${repo} updated:>=${date}`;
@@ -157,9 +157,9 @@ const getRemoveBotQueryStr = () => {
 }
 
 const getCommitsForRepo = async (owner, repo) => {
-    const since = getNMonthsAgo(3).toISOString();
+    const since = getNMonthsAgo(MONTHS).toISOString();
     try {
-        return await octokit.paginate(octokit.rest.repos.listCommits, {
+        return await octokit.paginate(octokit.repos.listCommits, {
           owner,
           repo,
           since,
@@ -167,6 +167,22 @@ const getCommitsForRepo = async (owner, repo) => {
         }); 
     } catch (e) {
         console.error('Received error in getCommitsForRepo: ', e);
+        throw e;
+    }
+}
+
+const getPRsForRepo = async (owner, repo) => {
+    const since = getNMonthsAgo(MONTHS).toISOString();
+    try {
+        return await octokit.paginate(octokit.pulls.list, {
+            owner,
+            repo,
+            since,
+            sort: 'created',
+            per_page: 100
+        });
+    } catch (e) {
+        console.error('Received error in getPRsForRepo: ', e);
         throw e;
     }
 }
@@ -253,13 +269,19 @@ async function community(owner, repo) {
 
     const commits = await getCommitsForRepo(owner, repo);
     const { topContributors, otherContributors } = await getTopContributors(commits);
+    const PRs = await getPRsForRepo(owner, repo);
+
+    const numPRsNotByTopContributors = PRs.filter(({ author: { login }}) => 
+        !topContributors.includes(login)).length;
     const numCommitsNotByTopContributors = commits.filter(({ author: { login }}) =>
         !topContributors.includes(login)).length;
-    const crit3p1 = parseFloat((numCommitsNotByTopContributors / commits.length).toFixed(2));
     
-    const crit3p2 = 'TODO';
+    
+    const crit3p1 = parseFloat((numPRsNotByTopContributors / PRs.length).toFixed(2));
+    const crit3p2 = parseFloat((numCommitsNotByTopContributors / commits.length).toFixed(2));
+    
     const crit4p1 = 'TODO';
-    const crit4p2 = 'TODO';
+    const crit4p2 = 'TODO - ??? DISCUSS THIS';
     
     return {
         crit1: 0,
