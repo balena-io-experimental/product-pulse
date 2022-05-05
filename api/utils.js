@@ -38,14 +38,41 @@ const sortByAuthor = (commits) => {
 }
 
 const getCoreContributors = (commits) => {
-  // TODO acually do this...
-  const authors = sortByAuthor(commits);
-  return ['20k-ultra', 'cywang117', 'pipex']
+  const commitCount = commits.length;
+
+  const commitsPerContributor = commits
+      .map(({ author }) => author.login)
+      .reduce((countMap, login) => {
+          if (!countMap[login]) {
+              countMap[login] = 1;
+          } else {
+              countMap[login]++;
+          }
+          return countMap;
+      }, {});
+
+  const numContributors = Object.keys(commitsPerContributor).length;
+
+  const thresholdCommitCount = Math.floor(commitCount / numContributors);
+
+  const coreContributors = commitsPerContributor
+      .filter(([, numCommits ]) => numCommits >= thresholdCommitCount)
+      .map(([ login ]) => login);
+
+  return coreContributors;
 }
+
+const FLOAT_DECIMAL_PLACES = 3;
+const roundFloat = (float) => parseFloat(float.toFixed(FLOAT_DECIMAL_PLACES));
+const percentage = (num1, num2) => roundFloat(num1 / num2);
+const average = (num1, num2) => (num1 + num2) / 2;
 
 module.exports = {
   toGitHubQueryDate,
   getNMonthsAgo,
   sortByAuthor,
   getCoreContributors,
+  roundFloat,
+  percentage,
+  average
 }

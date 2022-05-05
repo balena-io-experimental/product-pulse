@@ -1,7 +1,7 @@
 const github = require('./github');
 const maintenance = require('./maintenance');
 const direction = require('./direction');
-// const community = require ('./community');
+const community = require ('./community');
 
 exports.calculate = async (owner, repo) => {
 
