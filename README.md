@@ -1,12 +1,12 @@
 ![logo](/docs/assets/product-pulse.svg)
 
-**Product Pulse is a data model that helps you build a snapshot of a product's or project's health based on user data and activity.**
+**Product Pulse is a data model that helps you build a snapshot of a product's or project's health based on user data and activity. Couple this model with your own interpreter to track the health of your product, whether it's a code repo or project management software.**
 
 ## Highlights
 
-- **Get a high-level look at product health** based on repo activity, seeing scores for Direction, Maintenance, and Community health.
-- **Criteria can be adopted for low/no code products** making this inclusive of all types of technical projects
-- **Integrate Product Pulse with other non-repo services** like other project management solutions (Asana, Monday, etc.)
+- **Get a high-level look at product health** based on user and repo activity, visualizing scores for Direction, Maintenance, and Community health.
+- **Criteria can be adopted for low/no code products** making this inclusive of all types of technical projects.
+- **Integrate the Product Pulse data model with other non-repo services** like other project management solutions (Asana, Monday, etc.).
 
 ## Motivation
 
@@ -16,7 +16,9 @@ Our amazing team created Product Pulse as part of Hack Week May 2022 to help fel
 
 This can ease the way in which we identify which products are doing well, and which products might need some help. The sooner we can identify products that need help, the sooner we can reduce friction and burnout from the challenges involved in maintaining products.
 
-The initial GitHub interpretation of this product uses repo activity to determine how healthy a product is. We gauge product health by:
+**The initial GitHub interpretation of this product uses repo activity to determine product and repo health.**
+
+We gauge product health by:
 
 * **Direction** - Are there owners and leaders of this product directing the work toward successful outcomes?
 * **Maintenance** - Are commits, issues, and PRs being created, reviewed, and closed to help maintain product health?
