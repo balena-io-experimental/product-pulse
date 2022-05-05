@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const validation = require('./validation');
 const { getNMonthsAgo } = require('./utils');
+const maintenance = require('./maintenance');
 
 // All query results should return newer than MOUNTS_COUNT months
 // to not include outdated GitHub stats.
@@ -232,18 +233,6 @@ const hasCommitInTimePeriod = async (owner, repo) => {
 // PRs not made by topContributors
 // Commits not made by topContributors
 
-async function maintenance(owner, repo) {
-  const commits = await getCommitsForRepo(owner, repo);
-  console.log('commits: ', commits.length);
-  return {
-    crit1: 0,
-    crit2: 0,
-    crit3: 0,
-    crit4: 0,
-    crit5: 0,
-  };
-}
-
 async function direction() {
   return {
     crit1: 0,
@@ -299,9 +288,9 @@ exports.calculateModel = async (owner, repo) => {
  
 
   // Apply individual algorithms
-  const mData = await maintenance(owner, repo);
-  const dData = await direction(owner, repo);
-  const cData = await community(owner, repo);
+  const mData = await maintenance.get(owner, repo);
+  const dData = await direction();
+  const cData = await community();
 
   return {
     maintenance: 0.05, // average the mData 
