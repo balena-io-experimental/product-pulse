@@ -2,6 +2,15 @@
 
 Product Pulse was created as a hack week project. We warmly welcome contributions and testing.
 
+The best way to contribute to Product Pulse is to test it out by inputting your product repos into it and letting us know what you think. Other than testing it out, we'd appreciate adding more interpreters into the mix. We started out with just GitHub, but welcome modeling and thoughts for:
+
+* GitLab
+* BitBucket
+* GitTea
+* Asana
+* Monday
+* ...and more
+
 ## Overview
 
 Make sure you checkout our architecture guide, which aims to explain how all pieces fit together. It's a good starting point for understanding how we designed and built Product Pulse.
