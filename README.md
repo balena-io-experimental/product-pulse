@@ -4,7 +4,7 @@
 
 ## Highlights
 
-- **Get a high-level look at product health** based on user and repo activity, visualizing scores for Direction, Maintenance, and Community health.
+- **Get a high-level look at product or project health** based on user and repo activity, visualizing scores for Direction, Maintenance, and Community health.
 - **Criteria can be adopted for low/no code products** making this inclusive of all types of technical projects.
 - **Integrate the Product Pulse data model with other non-repo services** like other project management solutions (Asana, Monday, etc.).
 
@@ -26,11 +26,56 @@ We gauge product health by:
 
 This is all up for improvement as more people use this hack week project.
 
-## Usage and configuration
+### The model
+Here's a high-level look at our data model for Product Pulse. We made these criteria as generic as possible so that a user could see how to connect each criteria to relevant data that will come from their product repo or project tracking tool.
 
-![Image of tool](/docs/assets/example.png)
+**Direction**
+* Criterion 1 (low): Communicates how to contribute
+* Criterion 2 (high): Same person approves of changes
+* Criterion 3 (med): Same person makes changes
+* Criterion 4 (low): People get assigned to issues
 
-Users can input their public GitHub repo into Product Pulse and get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
+**Maintenance**
+* Criterion 1 (high): Has had recent changes
+* Criterion 2 (high): Open to close issue ratio is less than $X%
+* Criterion 3 (low): Data is organized
+* Criterion 4 (medium): Communication with issues
+* Criterion 5 (medium): Explains architecture
+
+**Community**
+* Criterion 1 (low): Has more than $X positive sentiment (likes/watches/stars)
+* Criterion 2 (low): Has 3rd party development
+* Criterion 3 (high): Has 3rd party contributions
+* Criterion 4 (high): Has users
+
+
+### GitHub Interpreter
+For our GitHub Interpreter, we took the model and applied repo and user data sourced by the GitHub API. This is how each criteria will use data and determine health scores.
+
+`$U = user where contributions in $C commits for $W weeks is > $P% of total contributions`
+
+**Direction**
+* Criterion 1: Has a CONTRIBUTING.md file
+* Criterion 2: $X% of pull requests are reviewed or commented by $U contributors
+* Criterion 3: $X% of last $Y commits are from $U contributors
+* Criterion 4: $X of issues that have been assigned in the last $W weeks 
+
+**Maintenance**
+* Criterion 1: Has had a commit in $W weeks
+* Criterion 2: Open to close issue ratio is less than $X%
+* Criterion 3: $X% of issues are labeled in $W weeks
+* Criterion 4: $X% Issues have responses from someone in $U contributor (last Y weeks)
+* Criterion 5: Does the readme contain an ARCHITECTURE.md
+
+**Community**
+* Criterion 1: Has more than $X stars + watches in $W weeks
+* Criterion 2: Has $X forks in $W weeks
+* Criterion 3: Has external PRs in $W weeks
+* Criterion 3: $X% of commits for past $W weeks are NOT in $U contributors
+* Criterion 4: $X% of issues are created OR commented by user NOT in $U contributors
+* Criterion 4: Repo used by is greater than $X
+
+Get more detail about the modeling, criteria, and our GitHub interpreter in our [documentations](/docs).
 
 ## Future state / roadmap
 
@@ -41,9 +86,19 @@ We want offer a backend service that provides endpoints for:
 
 Please see our [documentation](/docs) for more details on our roadmap.
 
+## Usage and configuration
+
+![Image of tool](/docs/assets/example.png)
+
+Users can input their public GitHub repo into Product Pulse and get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
+
 ## Documentation
 
-Please see our [documentation](/docs) for more details on the health metrics, math, and our roadmap.
+Please see our documentation for more on:
+
+* [the Product Pulse data model and examples of interpreters](/docs/01-data-model.md)
+* [scoring and criteria definitions](/docs/02-github-interpreter.md)
+* [roadmap](/docs/03-roadmap.md)
 
 ## Contributing
 
