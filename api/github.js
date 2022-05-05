@@ -226,6 +226,19 @@ const hasCommitInTimePeriod = async (owner, repo) => {
 // Check if memoized commit array is not empty
 }
 
+const getContributingFileSize = async (owner, repo) => {
+    try {
+        const {data} =  await octokit.repos.getContent({owner, repo, path: 'CONTRIBUTING.md'}); 
+        return data.size;
+    } catch (e) {
+        if (e.status === 404) {
+            return 0;
+        }
+        console.error('Received error in getContributingFileSize: ', e);
+        throw e;
+    }
+}
+
 // issues open:closed ratio
 // issues label:nolabel ratio (where label was added)
 // repo has CONTRIBUTING.md
@@ -233,9 +246,11 @@ const hasCommitInTimePeriod = async (owner, repo) => {
 // PRs not made by topContributors
 // Commits not made by topContributors
 
-async function direction() {
+async function direction(owner, repo) {
+    const contributingSize = await getContributingFileSize(owner, repo);
+
   return {
-    crit1: 0,
+      crit1: contributingSize > 0, // QUESTION: should we check for a minimum size
     crit2: 0,
     crit3: 0,
     crit4: 0,
@@ -289,8 +304,8 @@ exports.calculateModel = async (owner, repo) => {
 
   // Apply individual algorithms
   const mData = await maintenance.get(owner, repo);
-  const dData = await direction();
-  //const cData = await community(owner, repo);
+  const dData = await direction(owner, repo);
+
 
   return {
     maintenance: 0.05, // average the mData 
