@@ -3,6 +3,8 @@ const { Octokit} = require('@octokit/rest');
 // This is imported to throttle requests, but isn't used directly - see plugin-throttling docs for example
 const { throttling } = require('@octokit/plugin-throttling');
 const { paginateRest } = require('@octokit/plugin-paginate-rest');
+const fetch = require('node-fetch');
+require('dotenv').config();
 
 const validation = require('./validation');
 const { getNMonthsAgo } = require('./utils');
@@ -77,19 +79,10 @@ exports.getOwnerAndRepo = (gitHubUri) => {
  */
 exports.isAccessibleRepo = async (owner, repo) => {
     try {
-        const response = await octokit.rest.repos.get({
-            owner,
-            repo
-        });
-        const isAccessible = response.status === 200;
-
-        if (isAccessible) {
-            const { data } = response;
-            memo[data.full_name] = data;
-        }
-
-        return isAccessible;
+        const response = await fetch(`https://github.com/${owner}/${repo}`);
+        return response.ok;
     } catch (e) {
+        console.error('Received error in isAccessibleRepo: ', e);
         return false;
     }
 }
@@ -148,7 +141,7 @@ const getRepoEngagementCount = async (owner, repo) => {
         }
 
         const { forks_count, stargazers_count, watchers_count } = items[0];
-        return { forks_count, stargazers_count, watchers_count };
+        return { forks: forks_count, stars: stargazers_count, watchers: watchers_count };
     } catch (e) {
         console.error('Received error in getRepoEngagementCount: ', e);
         throw e;
@@ -178,12 +171,11 @@ const getCommitsForRepo = async (owner, repo) => {
     }
 }
 
-const getTopContributors = async (owner, repo) => {
+const getTopContributors = async (commits) => {
     try {
-        const rawCommits = await getCommitsForRepo(owner, repo);
-        const commitCount = rawCommits.length;
+        const commitCount = commits.length;
 
-        const commitsPerContributor = rawCommits
+        const commitsPerContributor = commits
             .map(({ author }) => author.login)
             .reduce((countMap, login) => {
                 if (!countMap[login]) {
@@ -245,26 +237,49 @@ async function direction() {
   };
 }
 
-async function community() {
-  return {
-    crit1: 0,
-    crit2: 0,
-    crit3: 0,
-    crit4: 0,
-  };
+/**
+ * Criterion 1: Has more than $X stars + watches in $W weeks
+Criterion 2: Has $X forks in $W weeks
+Criterion 3: Has external PRs in $W weeks
+Criterion 3: $X% of commits for past $W weeks are NOT in $U contributors
+Criterion 4: $X% of issues are created OR commented by user NOT in $U contributors
+Criterion 4: Repo used by is greater than $X
+
+ */
+async function community(owner, repo) {
+    const { stars, forks } = await getRepoEngagementCount(owner, repo);
+    const crit1 = stars;
+    const crit2 = forks;
+
+    const commits = await getCommitsForRepo(owner, repo);
+    const { topContributors, otherContributors } = await getTopContributors(commits);
+    const numCommitsNotByTopContributors = commits.filter(({ author: { login }}) =>
+        !topContributors.includes(login)).length;
+    const crit3p1 = parseFloat((numCommitsNotByTopContributors / commits.length).toFixed(2));
+    
+    const crit3p2 = 'TODO';
+    const crit4p1 = 'TODO';
+    const crit4p2 = 'TODO';
+    
+    return {
+        crit1: 0,
+        crit2: 0,
+        crit3: 0,
+        crit4: 0,
+    };
 }
 
 exports.calculateModel = async (owner, repo) => {
 
   // Collect data for all the algorithms
-  const commits = await getCommitsForRepo(owner,repo);
+  // const commits = await getCommitsForRepo(owner,repo);
   // add more...
  
 
   // Apply individual algorithms
-  //const mData = await maintenance(owner, repo);
-  const dData = await direction();
-  const cData = await community();
+  const mData = await maintenance(owner, repo);
+  const dData = await direction(owner, repo);
+  const cData = await community(owner, repo);
 
   return {
     maintenance: 0.05, // average the mData 

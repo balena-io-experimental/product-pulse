@@ -13,13 +13,16 @@ app.use(cors());
 app.use(express.static(BUILD_DIR));
 
 app.get('/pulse/:org/:repo', async (req, res) => {
-  let data = null;
+  const { org, repo } = req.params;
   try {
-    data = await github.calculateModel(req.params.org, req.params.repo) 
+    if (!(await github.isAccessibleRepo(org, repo))) {
+      return res.status(400).send('Not a valid repo or is not accessible');
+    }
+    const data = await github.calculateModel(req.params.org, req.params.repo) 
+    return res.status(200).send(data);
   } catch (e) {
     return res.status(500).send(`Error - ${e}`);
   }
-  return res.send(data);
 });
 
 app.get('/', (req, res) => {
