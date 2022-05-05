@@ -10,7 +10,7 @@ const toGitHubQueryDate = (date) => date.toISOString().replace(/T.+Z/, '');
  * @param {number} n
  * @returns string
  */
-export const getNMonthsAgo = (n) => {
+exports.getNMonthsAgo = (n) => {
     const date = new Date();
     const curMonth = date.getMonth();
 

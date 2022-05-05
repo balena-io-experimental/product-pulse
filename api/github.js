@@ -1,10 +1,10 @@
-import { Octokit } from '@octokit/rest';
+const { Octokit} = require('@octokit/rest');
 // This is imported to throttle requests, but isn't used directly - see plugin-throttling docs for example
-import { throttling } from '@octokit/plugin-throttling';
-import { paginateRest } from '@octokit/plugin-paginate-rest';
+const { throttling } = require('@octokit/plugin-throttling');
+const { paginateRest } = require('@octokit/plugin-paginate-rest');
 
-import * as validation from './validation';
-import { getNMonthsAgo } from './utils';
+const validation = require('./validation');
+const { getNMonthsAgo } = require('./utils');
 
 // All query results should return newer than MOUNTS_COUNT months
 // to not include outdated GitHub stats.
@@ -55,7 +55,7 @@ const octokit = new MyOctokit({
  * @param {string} gitHubUri 
  * @returns {Array[string, string]}
  */
-export const getOwnerAndRepo = (gitHubUri) => {
+exports.getOwnerAndRepo = (gitHubUri) => {
     if (!validation.isGitHubUri(gitHubUri)) {
         return;
     }
@@ -74,7 +74,7 @@ export const getOwnerAndRepo = (gitHubUri) => {
  * @param {string} repo 
  * @returns {boolean}
  */
-export const isAccessibleRepo = async (owner, repo) => {
+exports.isAccessibleRepo = async (owner, repo) => {
     try {
         const response = await octokit.rest.repos.get({
             owner,
@@ -227,6 +227,49 @@ const hasCommitInTimePeriod = async (owner, repo) => {
 // PRs not made by topContributors
 // Commits not made by topContributors
 
-export const calculateModel = async (owner, repo) => {
-    // Do all calculations in here and store data in memo object whenever possible to avoid repeated requests
+async function maintenance() {
+  return {
+    crit1: 0,
+    crit2: 0,
+    crit3: 0,
+    crit4: 0,
+    crit5: 0,
+  };
+}
+
+async function direction() {
+  return {
+    crit1: 0,
+    crit2: 0,
+    crit3: 0,
+    crit4: 0,
+  };
+}
+
+async function community() {
+  return {
+    crit1: 0,
+    crit2: 0,
+    crit3: 0,
+    crit4: 0,
+  };
+}
+
+exports.calculateModel = async (owner, repo) => {
+
+  // Collect data for all the algorithms
+  const commits = await getCommitsForRepo(owner,repo);
+  // add more...
+ 
+
+  // Apply individual algorithms
+  const mData = await maintenance(commits);
+  const dData = await direction(commits);
+  const cData = await community(commits);
+
+  return {
+    maintenance: 0.05, // average the mData 
+    direction: 0.15, // average the dData
+    community: 0.5, // average the cData
+  };
 }
