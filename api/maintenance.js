@@ -6,6 +6,7 @@ const { paginateRest } = require('@octokit/plugin-paginate-rest');
 const moment = require('moment');
 
 const { getNMonthsAgo } = require('./utils');
+const github = require('./github');
 
 // Exclude bots from contributor calculations
 const GH_BOTS = process.env.GH_BOTS || ['balena-ci', 'renovate-bot', 'Balena CI', 'bulldozer-balena[bot]'];
@@ -78,25 +79,6 @@ async function getCommitsForRepo (owner, repo, monthRange) {
   }
 }
 
-async function fileExists(owner, repo, path) {
-  try {
-    await octokit.repos.getContent({
-      owner,
-      repo,
-      path
-    })
-  } catch (e) {
-    switch (e.status) {
-      case 404:
-        return false;
-      default:
-        console.error(e)
-        throw e;
-    }
-  }
-  return true;
-}
-
 /**
  * Given a GitHub owner and repo, return a count of issues categorized by open & closed.
  * @param {string} owner 
@@ -152,7 +134,7 @@ exports.get = async (owner, repo) => {
     return f;
   }, []).join(' ');
   const maintainerCommented = await getIssues(owner, repo, MONTHS, maintainersFilter);
-  const archMdExists = await fileExists(owner, repo, 'ARCHITECTURE.md');
+  const archMdExists = await github.fileExists(owner, repo, 'ARCHITECTURE.md');
 
   return {
     crit1: criterion1(commits, 1, 4), // Has had X commits in W weeks

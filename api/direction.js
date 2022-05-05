@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const validation = require('./validation');
 const { getNMonthsAgo } = require('./utils');
+const maintenance = require('./maintenance');
 
 // All query results should return newer than MOUNTS_COUNT months
 // to not include outdated GitHub stats.
@@ -58,7 +59,7 @@ const octokit = new MyOctokit({
  * @param {string} gitHubUri 
  * @returns {Array[string, string]}
  */
-const getOwnerAndRepo = (gitHubUri) => {
+exports.getOwnerAndRepo = (gitHubUri) => {
   if (!validation.isGitHubUri(gitHubUri)) {
     return;
   }
@@ -77,14 +78,14 @@ const getOwnerAndRepo = (gitHubUri) => {
  * @param {string} repo 
  * @returns {boolean}
  */
-const isAccessibleRepo = async (owner, repo) => {
-    try {
-        const response = await fetch(`https://github.com/${owner}/${repo}`);
-        return response.ok;
-    } catch (e) {
-        console.error('Received error in isAccessibleRepo: ', e);
-        return false;
-    }
+exports.isAccessibleRepo = async (owner, repo) => {
+  try {
+    const response = await fetch(`https://github.com/${owner}/${repo}`);
+    return response.ok;
+  } catch (e) {
+    console.error('Received error in isAccessibleRepo: ', e);
+    return false;
+  }
 }
 
 /**
@@ -108,13 +109,13 @@ const getIssueOrPRCount = async (owner, repo, type) => {
     const issueQueryStrings = ['is:closed', 'no:label'];
 
     const { data: { total_count: closed }} = await octokit.search.issuesAndPullRequests({
-      q: `${queryBase} is:closed`,
-      ...COUNT_OPTIONS
+        q: `${queryBase} is:closed`,
+        ...COUNT_OPTIONS
     });
 
     const { data: { total_count: open }} = await octokit.search.issuesAndPullRequests({
-      q: `${queryBase} is:open`,
-      ...COUNT_OPTIONS
+        q: `${queryBase} is:open`,
+        ...COUNT_OPTIONS
     });
 
     return { closed, open };
@@ -216,9 +217,13 @@ const getTopContributors = async (commits) => {
 
     return { topContributors, otherContributors };
   } catch (e) {
-    console.error('Received error in getTopContributors: ', e);
-    throw e;
+      console.error('Received error in getTopContributors: ', e);
+      throw e;
   }
+}
+
+const hasCommitInTimePeriod = async (owner, repo) => {
+// Check if memoized commit array is not empty
 }
 
 const getContributingFileSize = async (owner, repo) => {
@@ -234,34 +239,21 @@ const getContributingFileSize = async (owner, repo) => {
   }
 }
 
-const fileExists = async (owner, repo, path) => {
-  try {
-    await octokit.repos.getContent({
-      owner,
-      repo,
-      path
-    })
-  } catch (e) {
-    switch (e.status) {
-      case 404:
-        return false;
-      default:
-        console.error(e)
-        throw e;
-    }
-  }
-  return true;
+// issues open:closed ratio
+// issues label:nolabel ratio (where label was added)
+// repo has CONTRIBUTING.md
+// repo has ARCHITECTURE.md
+// PRs not made by topContributors
+// Commits not made by topContributors
+
+exports.get = async (owner, repo) => {
+  const contributingSize = await getContributingFileSize(owner, repo);
+
+  return {
+    crit1: contributingSize > 0, // QUESTION: should we check for a minimum size
+    crit2: 0,
+    crit3: 0,
+    crit4: 0,
+  };
 }
 
-module.exports = {
-  isAccessibleRepo,
-  fileExists,
-  getContributingFileSize,
-  getTopContributors,
-  getPRsForRepo,
-  getIssueOrPRCount,
-  getCommitsForRepo,
-  getOwnerAndRepo,
-  getRepoEngagementCount,
-  getRemoveBotQueryStr,
-}
