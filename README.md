@@ -10,7 +10,7 @@
 
 ## Motivation
 
-Product Pulse is a data model that helps you map user and project data (like repo and project management activity) to a simple health check based on three scores: Direction, Maintenance, and Community. The vision for the Product Pulse data model is that it can interfaced with any custom interpretation. Our first exploration is tracking the health of GitHub repos. Other usage includes mapping the model to popular project management tools like Asana or Monday and interpreting its user signals accordingly.
+Product Pulse uses repo and project management activity to create a simple health check based on three scores: Direction, Maintenance, and Community. The vision for the Product Pulse data model is that it can interfaced with any custom interpretation. Our first exploration is tracking the health of GitHub repos. Other usage includes mapping the model to popular project management tools like Asana or Monday and interpreting its user signals accordingly.
 
 ![data flow](/docs/assets/flow.png)
 
@@ -22,7 +22,17 @@ This can ease the way in which we identify which products are doing well, and wh
 
 ![Image of tool](/docs/assets/example.png)
 
-Users can input their public GitHub repo into Product Pulse an d get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
+Users can input their public GitHub repo into Product Pulse and get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
+
+### Who should use Product Pulse?
+
+**Developers and engineers** can get a high-level look at commit, issue, and PR progress and velocity. They can also get a sense of whether they're growing community around their product.
+
+**Operators and product managers** can use scoring to understand how quickly commits and issues are being made and tracked. They can map community signals to their community score to have a quick way of seeing what kind of engagement is happening.
+
+**Project managers and administrators** can map their tool's progress and user data to their own interpreter to determine project progress and community growth beyond code contribution (e.g. milestone completion, project completion signals from tools like Asana or Monday).
+
+**Directors and leaders** can put multiple product cards into a dashboard to see all products and their health scores from one view. **(Not in Hack Week MVP-- on roadmap...)**
 
 **The initial GitHub interpretation of this product uses repo activity to determine product and repo health.**
 
@@ -79,7 +89,7 @@ For our GitHub Interpreter, we took the model and applied repo and user data sou
 * Criterion 2: Has $X forks in $W weeks
 * Criterion 3: Has external PRs in $W weeks
 * Criterion 3: $X% of commits for past $W weeks are NOT in $U contributors
-* Criterion 4: $X% of issues are created OR commented by user NOT in $U contributors
+* Criterion 4: $X% of issues are created by user NOT in $U contributors
 * Criterion 4: Repo used by is greater than $X
 
 Get more detail about the modeling, criteria, and our GitHub interpreter in our [documentation](/docs).

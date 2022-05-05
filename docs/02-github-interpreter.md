@@ -19,9 +19,9 @@ For our GitHub Interpreter, we took the model and applied repo and user data sou
 **Community**
 * Criterion 1: Has more than $X stars + watches in $W weeks
 * Criterion 2: Has $X forks in $W weeks
-* Criterion 3: Has external PRs in $W weeks
-* Criterion 3: $X% of commits for past $W weeks are NOT in $U contributors
-* Criterion 4: $X% of issues are created OR commented by user NOT in $U contributors
+* Criterion 3a: $X% of external PRs in $W weeks
+* Criterion 3b: $X% of commits for past $W weeks are NOT in $U contributors
+* Criterion 4: $X% of issues are created by user NOT in $U contributors
 * Criterion 4: Repo used by is greater than $X
 
 If you see a way for a criteria to be better defined, or if you want to recommend GitHub data to help us better define the health of a product, please let us know in the Issues.
