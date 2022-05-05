@@ -290,7 +290,7 @@ exports.calculateModel = async (owner, repo) => {
   // Apply individual algorithms
   const mData = await maintenance.get(owner, repo);
   const dData = await direction();
-  const cData = await community();
+  //const cData = await community(owner, repo);
 
   return {
     maintenance: 0.05, // average the mData 

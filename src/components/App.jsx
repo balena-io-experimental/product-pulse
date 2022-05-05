@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Container, Divider, Txt, Flex } from 'rendition';
+import { Input, Container, Divider, Txt, Flex, Spinner } from 'rendition';
 import { useDebounce } from 'use-debounce';
 
 import Header from './Header';
 import ProductCard from './ProductCard';
-import { INVALID_URI, URI_DOES_NOT_EXIST } from '../errors';
-import { getModel } from '../model';
+
+import { getOwnerAndRepo } from '../gitHubUriParsing';
 
 const App = () => {
     /**
@@ -16,53 +16,66 @@ const App = () => {
     const [uri] = useDebounce(input, 1000);
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [ownersAndRepos, setOwnersAndRepos] = useState([]);
     const [models, setModels] = useState({});
-
-    const [keyToUpdate, setKeyToUpdate] = useState('');
+    const [loading, setLoading] = useState(false);
 
     /**
      * HOOKS
      */
 
+    const mapNumbersToColors = (model) => {
+        Object.keys(model).map(key => {
+            if(model[key] < 0.2) {
+                model[key] = 'red';
+            } else if (model[key] < 0.8) {
+                model[key] = 'yellow';
+            } else {
+                model[key] = 'green';
+            }
+        });
+
+        console.log(model);
+        return model;
+    }
+
     /**
-     * Update user message based on GitHub URI in user input
+     * Fetch model from GitHub URI in user input
      * @param {string} URI 
-     * @returns boolean
      */
-    const updateMessage = async (URI) => {
-        // Check if valid GitHub URI string
-        const isValidUri = isGitHubUri(URI);
-        if (!isValidUri) {
-            setErrorMessage(INVALID_URI);
-            return false;
+    const fetchModel = async(URI) => {
+        const [owner, repo] = getOwnerAndRepo(URI);
+        const resp = await fetch(`http://localhost:3000/pulse/${owner}/${repo}`);
+        const body = await resp.text();
+        if(!resp.ok) {
+            throw new Error(body);
         }
-
-        let [owner, repo] = Github.getOwnerAndRepo(URI);
-        // Check if accessible repo
-        const isAccessible = await Github.isAccessibleRepo(owner, repo);
-        if (!isAccessible) {
-            setErrorMessage(URI_DOES_NOT_EXIST);
-            return false;
-        }
-
         setErrorMessage('');
-        setOwnersAndRepos([...ownersAndRepos, [owner, repo]]);
-        setKeyToUpdate(`${owner}/${repo}`);
-        return true;
+
+        const newModel = {...models};
+        newModel[`${owner}/${repo}`] = mapNumbersToColors(JSON.parse(body));
+        setModels(newModel);
+    }
+
+    /**
+     * Update model based on GitHub URI in user input
+     * @param {string} URI 
+     */
+    const updateModel = async (URI) => {
+
+        setLoading(true);
+        try {
+            await fetchModel(URI);
+        } catch(e) {
+            setErrorMessage(e.message);
+        } finally {
+            setLoading(false);
+        }
     }
 
     const onClose = (key) => {
-        setKeyToUpdate(null);
-
-        setOwnersAndRepos(ownersAndRepos.filter(
-            ownerAndRepo => `${ownerAndRepo[0]}/${ownerAndRepo[1]}` !== key
-        ));
         const newModel = {...models};
         delete newModel[key];
-        console.log(newModel);
         setModels(newModel);
-
     }
 
     useEffect(() => {
@@ -70,41 +83,8 @@ const App = () => {
             return;
         }
 
-        updateMessage(uri);
+        updateModel(uri);
     }, [uri]);
-
-    useEffect(() => {
-        const ownerAndRepo = ownersAndRepos.find(
-            ownerAndRepo => `${ownerAndRepo[0]}/${ownerAndRepo[1]}` === keyToUpdate
-        );
-
-        if (
-            !Array.isArray(ownerAndRepo) || 
-            ownerAndRepo.length !== 2 || 
-            ownerAndRepo[0] == null || 
-            ownerAndRepo[1] == null
-        ) {
-            return;
-        }
-
-        fetch('/api')
-            .then(resp => resp.text())
-            .then(console.log);
-
-        return;
-
-        Promise.all([
-            Github.calculateModel(...ownerAndRepo)
-        ])
-        .then((data) => {
-            // TODO: do something with data
-            const newModel = {...models};
-            newModel[keyToUpdate] = getModel(data);
-            setModels(newModel);
-        })
-        .catch(console.error);
-
-    }, [keyToUpdate]);
 
 
     /**
@@ -132,26 +112,25 @@ const App = () => {
                 <Txt color={'red'} height={'1.5em'}>{errorMessage}</Txt>
             </Container>
             <Divider mt={'1em'} pb={'1em'} />
-            {models && <Container mt={'2em'}>
-                <Flex alignItems='center' flexDirection='column'>
-                    {Object.entries(models).map(([key, model], idx) => {
-
-                        const owner = key.split('/')[0];
-                        const repo = key.split('/')[1];
-
-                        return (
-                        <ProductCard
-                            key={idx}
-                            owner={owner}
-                            repo={repo}
-                            directed={model.directed}
-                            maintained={model.maintained}
-                            issues={model.issues}
-                            onClose={() => onClose(key)}
-                        />);
-                    })}
-                </Flex>
-            </Container>}
+            <Flex alignItems='center' flexDirection='column'>
+                <Spinner emphasized show={loading}/>
+                {models && <Container mt={'2em'}>
+                        {Object.entries(models).reverse().map(([key, model], idx) => {
+                            
+                            const owner = key.split('/')[0];
+                            const repo = key.split('/')[1];
+                            
+                            return (
+                            <ProductCard
+                                key={idx}
+                                owner={owner}
+                                repo={repo}
+                                model={model}
+                                onClose={() => onClose(key)}
+                            />);
+                        })}
+                </Container>}
+            </Flex>
         </Container>
     );
 }
