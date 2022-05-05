@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { Octokit} = require('@octokit/rest');
 // This is imported to throttle requests, but isn't used directly - see plugin-throttling docs for example
 const { throttling } = require('@octokit/plugin-throttling');
@@ -85,7 +86,6 @@ exports.isAccessibleRepo = async (owner, repo) => {
         if (isAccessible) {
             const { data } = response;
             memo[data.full_name] = data;
-            console.log(memo);
         }
 
         return isAccessible;
@@ -164,17 +164,14 @@ const getRemoveBotQueryStr = () => {
 }
 
 const getCommitsForRepo = async (owner, repo) => {
-    const date = getNMonthsAgo(3);
-
+    const since = getNMonthsAgo(3).toISOString();
     try {
-        const data = await octokit.paginate(octokit.search.commits, {
-            q: `repo:${owner}/${repo} author-date:>=${date} merge:false ${getRemoveBotQueryStr()}`,
-            per_page: 100
-        });
-
-        console.log(data);
-
-        return data;
+        return await octokit.paginate(octokit.rest.repos.listCommits, {
+          owner,
+          repo,
+          since,
+          per_page: 100
+        }); 
     } catch (e) {
         console.error('Received error in getCommitsForRepo: ', e);
         throw e;
@@ -227,7 +224,9 @@ const hasCommitInTimePeriod = async (owner, repo) => {
 // PRs not made by topContributors
 // Commits not made by topContributors
 
-async function maintenance() {
+async function maintenance(owner, repo) {
+  const commits = await getCommitsForRepo(owner, repo);
+  console.log('commits: ', commits.length);
   return {
     crit1: 0,
     crit2: 0,
@@ -263,9 +262,9 @@ exports.calculateModel = async (owner, repo) => {
  
 
   // Apply individual algorithms
-  const mData = await maintenance(commits);
-  const dData = await direction(commits);
-  const cData = await community(commits);
+  //const mData = await maintenance(owner, repo);
+  const dData = await direction();
+  const cData = await community();
 
   return {
     maintenance: 0.05, // average the mData 

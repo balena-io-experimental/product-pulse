@@ -17,7 +17,7 @@ app.get('/pulse/:org/:repo', async (req, res) => {
   try {
     data = await github.calculateModel(req.params.org, req.params.repo) 
   } catch (e) {
-    return res.status(500).send(`Error - $e`);
+    return res.status(500).send(`Error - ${e}`);
   }
   return res.send(data);
 });

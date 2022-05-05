@@ -3,7 +3,7 @@
  * @param {Date} date
  * @returns string
  */
-const toGitHubQueryDate = (date) => date.toISOString().replace(/T.+Z/, '');
+exports.toGitHubQueryDate = (date) => date.toISOString().replace(/T.+Z/, '');
 
 /**
  * Return YYYY-MM-DD timestamp n months ago from current timestamp.
@@ -11,14 +11,14 @@ const toGitHubQueryDate = (date) => date.toISOString().replace(/T.+Z/, '');
  * @returns string
  */
 exports.getNMonthsAgo = (n) => {
-    const date = new Date();
-    const curMonth = date.getMonth();
+  const date = new Date();
+  const curMonth = date.getMonth();
 
-    date.setMonth(curMonth - n);
-    // If still in same month, set date to last day of previous month
-    if (date.getMonth() === curMonth) {
-        date.setDate(0);
-    }
-    date.setHours(0, 0, 0, 0);
-    return toGitHubQueryDate(date);
+  date.setMonth(curMonth - n);
+  // If still in same month, set date to last day of previous month
+  if (date.getMonth() === curMonth) {
+      date.setDate(0);
+  }
+  date.setHours(0, 0, 0, 0);
+  return date;
 }
