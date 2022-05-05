@@ -14,15 +14,11 @@ const { getNMonthsAgo } = require('./utils');
 const MONTHS = 3;
 
 // Exclude bots from contributor calculations
-const GH_BOTS = process.env.GH_BOTS || ['balena-ci', 'renovate-bot'];
+const GH_BOTS = process.env.GH_BOTS || ['balena-ci', 'renovate-bot', 'Balena CI', 'bulldozer-balena[bot]'];
 
 // A set of options to pass to Octokit instance when you only 
 // care about the count of the results, to speed up query.
 const COUNT_OPTIONS = { per_page: 1 };
-
-// TODO: memoizee (would only help in production where webpack-dev-server
-// doesn't hot-reload the page with every change)
-const memo = {};
 
 /**
  * Setup GitHub REST API client
@@ -148,6 +144,9 @@ const getRepoEngagementCount = async (owner, repo) => {
   }
 }
 
+const isBot = (author) => {
+  return GH_BOTS.includes(author);
+}
 const getRemoveBotQueryStr = () => {
   const queryArr = GH_BOTS.reduce((qArr, bot) => {
     qArr.push(`NOT(author:${bot})`);
@@ -253,9 +252,41 @@ const fileExists = async (owner, repo, path) => {
   return true;
 }
 
+const getCommits = async (owner, repo, monthRange) => {
+  const since = getNMonthsAgo(monthRange).toISOString();
+  try {
+    return await octokit.paginate(octokit.rest.repos.listCommits, {
+      owner,
+      repo,
+      since,
+      per_page: 100
+    });
+  } catch (e) {
+    console.error('Received error in getCommitsForRepo: ', e);
+    throw e;
+  }
+}
+
+const getIssues = async (owner, repo, monthRange, filter) => {
+  const date = getNMonthsAgo(monthRange).toISOString();
+  try {
+    const queryBase = `type:issue repo:${owner}/${repo} updated:>=${date}`;
+    const { data } = await octokit.search.issuesAndPullRequests({
+      q: `${queryBase} ${filter}`,
+      per_page: 100
+    });
+    return data.items;
+  } catch (e) {
+    console.error('Received error in getIssueOrPRCount: ', e);
+    throw e;
+  }
+}
+
 module.exports = {
   isAccessibleRepo,
   fileExists,
+  getIssues,
+  getCommits,
   getContributingFileSize,
   getTopContributors,
   getPRsForRepo,

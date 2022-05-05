@@ -5,11 +5,8 @@ const { throttling } = require('@octokit/plugin-throttling');
 const { paginateRest } = require('@octokit/plugin-paginate-rest');
 const moment = require('moment');
 
-const { getNMonthsAgo } = require('./utils');
 const github = require('./github');
-
-// Exclude bots from contributor calculations
-const GH_BOTS = process.env.GH_BOTS || ['balena-ci', 'renovate-bot', 'Balena CI', 'bulldozer-balena[bot]'];
+const utils = require('./utils');
 
 /**
  * Setup GitHub REST API client
@@ -40,65 +37,10 @@ const octokit = new MyOctokit({
   }
 });
 
-function isBot(author) {
-  return GH_BOTS.includes(author);
-}
-
-function sortByAuthor(commits) {
-  const authors = new Map();
-  commits.forEach(commit => {
-    const author = commit.commit.author.name;
-    if (authors.has(author)) {
-      const previous = authors.get(author);
-      authors.set(author, { commits: previous.commits.concat(commit)})
-    } else {
-      authors.set(author, { commits: [commit]})
-    }
-  });
-  return authors 
-}
-
 function getCoreContributors(commits) {
   // TODO acually do this...
-  const authors = sortByAuthor(commits);
+  const authors = utils.sortByAuthor(commits);
   return ['20k-ultra', 'cywang117', 'pipex']
-}
-
-async function getCommitsForRepo (owner, repo, monthRange) {
-  const since = getNMonthsAgo(monthRange).toISOString();
-  try {
-    return await octokit.paginate(octokit.rest.repos.listCommits, {
-      owner,
-      repo,
-      since,
-      per_page: 100
-    });
-  } catch (e) {
-    console.error('Received error in getCommitsForRepo: ', e);
-    throw e;
-  }
-}
-
-/**
- * Given a GitHub owner and repo, return a count of issues categorized by open & closed.
- * @param {string} owner 
- * @param {string} repo
- * @param {string} type One of 'issue' or 'pr'
- * @returns {Object}: An object with 'closed' and 'open' keys and numeric values
- */
-async function getIssues (owner, repo, monthRange, filter) {
-  const date = getNMonthsAgo(monthRange).toISOString();
-  try {
-    const queryBase = `type:issue repo:${owner}/${repo} updated:>=${date}`;
-    const { data } = await octokit.search.issuesAndPullRequests({
-      q: `${queryBase} ${filter}`,
-      per_page: 100
-    });
-    return data.items;
-  } catch (e) {
-    console.error('Received error in getIssueOrPRCount: ', e);
-    throw e;
-  }
 }
 
 function criterion1(commits, x, w) {
@@ -126,14 +68,14 @@ function criterion5(architecureDocExists) {
 
 exports.get = async (owner, repo) => {
   const MONTHS = 3;
-  const commits = await getCommitsForRepo(owner, repo, MONTHS);
-  const issues = await getIssues(owner, repo, MONTHS);
+  const commits = await github.getCommitsForRepo(owner, repo, MONTHS);
+  const issues = await github.getIssues(owner, repo, MONTHS);
   const maintainers = getCoreContributors(commits);
   const maintainersFilter = maintainers.reduce((f, m) => {
     f.push(`commenter:${m}`)
     return f;
   }, []).join(' ');
-  const maintainerCommented = await getIssues(owner, repo, MONTHS, maintainersFilter);
+  const maintainerCommented = await github.getIssues(owner, repo, MONTHS, maintainersFilter);
   const archMdExists = await github.fileExists(owner, repo, 'ARCHITECTURE.md');
 
   return {

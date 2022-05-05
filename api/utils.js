@@ -3,14 +3,14 @@
  * @param {Date} date
  * @returns string
  */
-exports.toGitHubQueryDate = (date) => date.toISOString().replace(/T.+Z/, '');
+const toGitHubQueryDate = (date) => date.toISOString().replace(/T.+Z/, '');
 
 /**
  * Return YYYY-MM-DD timestamp n months ago from current timestamp.
  * @param {number} n
  * @returns string
  */
-exports.getNMonthsAgo = (n) => {
+const getNMonthsAgo = (n) => {
   const date = new Date();
   const curMonth = date.getMonth();
 
@@ -21,4 +21,24 @@ exports.getNMonthsAgo = (n) => {
   }
   date.setHours(0, 0, 0, 0);
   return date;
+}
+
+const sortByAuthor = (commits) => {
+  const authors = new Map();
+  commits.forEach(commit => {
+    const author = commit.commit.author.name;
+    if (authors.has(author)) {
+      const previous = authors.get(author);
+      authors.set(author, { commits: previous.commits.concat(commit)})
+    } else {
+      authors.set(author, { commits: [commit]})
+    }
+  });
+  return authors 
+}
+
+module.exports = {
+  toGitHubQueryDate,
+  getNMonthsAgo,
+  sortByAuthor,
 }
