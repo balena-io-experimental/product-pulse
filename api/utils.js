@@ -1,16 +1,19 @@
+// Exclude bots from contributor calculations
+const GH_BOTS = process.env.GH_BOTS || ['balena-ci', 'renovate-bot', 'Balena CI', 'bulldozer-balena[bot]'];
+
 /**
  * Given Date object, return a YYYY-MM-DD timestamp.
  * @param {Date} date
  * @returns string
  */
-const toGitHubQueryDate = (date) => date.toISOString().replace(/T.+Z/, '');
+exports.toGitHubQueryDate = (date) => date.toISOString().replace(/T.+Z/, '');
 
 /**
  * Return YYYY-MM-DD timestamp n months ago from current timestamp.
  * @param {number} n
  * @returns string
  */
-const getNMonthsAgo = (n) => {
+exports.getNMonthsAgo = (n) => {
   const date = new Date();
   const curMonth = date.getMonth();
 
@@ -24,46 +27,46 @@ const getNMonthsAgo = (n) => {
 }
 
 const sortByAuthor = (commits) => {
-  const authors = new Map();
-  commits.forEach(commit => {
-    const author = commit.commit.author.name;
-    if (authors.has(author)) {
-      const previous = authors.get(author);
-      authors.set(author, { commits: previous.commits.concat(commit)})
+  return commits.reduce((authors, c) => {
+    const author = c.commit.author.name;
+    if (authors[author]) {
+      authors[author].commits.push(c);
     } else {
-      authors.set(author, { commits: [commit]})
+      authors[author] = { commits: [c] };
     }
-  });
-  return authors 
+    return authors;
+  }, {});
 }
 
-const getCoreContributors = (commits) => {
-  const commitCount = commits.length;
+const removeBots = (commits) =>
+  commits.filter((c) => !GH_BOTS.includes(c.commit.author.name));
 
-  const commitsPerContributor = sortByAuthor(commits);
+exports.getCoreContributors = (commits) => {
+  // Remove commits made by bots
+  const commitsWithoutBots = removeBots(commits);
 
-  const numContributors = Object.keys(commitsPerContributor).length;
+  // Total contributor commit count
+  const commitCount = commitsWithoutBots.length;
 
-  const thresholdCommitCount = Math.floor(commitCount / commitsPerContributor.size);
+  // An object of authors -> a list of their commits
+  const commitsByAuthor = sortByAuthor(commitsWithoutBots);
 
-  const coreContributors = commitsPerContributor
-      .filter(([, numCommits ]) => numCommits >= thresholdCommitCount)
-      .map(([ login ]) => login);
+  // Total number of contributors
+  const numContributors = Object.keys(commitsByAuthor).length;
+
+  // Commit count when distributed evenly amongst contributors
+  // i.e. 100 commits distributed amongst 10 contributors == 10 commits (10 per contributor)
+  const distrbutedCommitCountPerContributor = Math.floor(commitCount / numContributors);
+
+  // Core contributors contributed more than distributed commit count
+  const coreContributors = Object.entries(commitsByAuthor)
+      .filter(([, commits ]) => commits.length >= distrbutedCommitCountPerContributor)
+      .map(([ contributor ]) => contributor);
 
   return coreContributors;
 }
 
 const FLOAT_DECIMAL_PLACES = 3;
-const roundFloat = (float) => parseFloat(float.toFixed(FLOAT_DECIMAL_PLACES));
-const percentage = (num1, num2) => roundFloat(num1 / num2);
-const average = (num1, num2) => (num1 + num2) / 2;
-
-module.exports = {
-  toGitHubQueryDate,
-  getNMonthsAgo,
-  sortByAuthor,
-  getCoreContributors,
-  roundFloat,
-  percentage,
-  average
-}
+exports.roundFloat = (float) => parseFloat(float.toFixed(FLOAT_DECIMAL_PLACES));
+exports.percentage = (num1, num2) => roundFloat(num1 / num2);
+exports.average = (num1, num2) => (num1 + num2) / 2;
