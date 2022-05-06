@@ -93,6 +93,14 @@ Get more detail about the modeling, criteria, and our GitHub interpreter in our 
 
 ![Image of tool](/docs/assets/example.png)
 
+To run the demo:
+```
+npm i
+// Add your GitHub token to api/.env under GITHUB_TOKEN=
+npm run dev // Run the npm scripts in 2 terminals
+cd api && npm run start
+```
+
 Users can input their public GitHub repo into Product Pulse and get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
 
 ## Future state / roadmap

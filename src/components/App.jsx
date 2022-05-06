@@ -16,20 +16,22 @@ const App = () => {
     const [uri] = useDebounce(input, 1000);
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [models, setModels] = useState({});
+    const [models, setModels] = useState(null);
     const [loading, setLoading] = useState(false);
 
     /**
      * HOOKS
      */
 
-    const mapNumbersToColors = (model) => {
+    const mapNumbersToColors = ({ legend, data: model }) => {
+
         Object.keys(model).map(key => {
-            if(model[key] < 0.2) {
+            if(model[key].score < legend[0]) {
                 model[key] = 'red';
-            } else if (model[key] < 0.8) {
+            } else if (model[key].score < legend[1]) {
                 model[key] = 'yellow';
             } else {
+                console.log(model[key]);
                 model[key] = 'green';
             }
         });
@@ -44,15 +46,18 @@ const App = () => {
      */
     const fetchModel = async(URI) => {
         const [owner, repo] = getOwnerAndRepo(URI);
-        const resp = await fetch(`/pulse/${owner}/${repo}`);
-        const body = await resp.text();
+        const ownerRepoString = `${owner}/${repo}`;
+        const resp = await fetch(`/pulse/${ownerRepoString}`);
+        const body = await resp.json();
         if(!resp.ok) {
             throw new Error(body);
         }
         setErrorMessage('');
 
-        const newModel = {...models};
-        newModel[`${owner}/${repo}`] = mapNumbersToColors(JSON.parse(body));
+        const newModel = { ...models };
+        if (!newModel[ownerRepoString]) {
+            newModel[ownerRepoString] = mapNumbersToColors(body);
+        }
         setModels(newModel);
     }
 
@@ -73,7 +78,7 @@ const App = () => {
     }
 
     const onClose = (key) => {
-        const newModel = {...models};
+        const newModel = { ...models };
         delete newModel[key];
         setModels(newModel);
     }
@@ -116,6 +121,7 @@ const App = () => {
                 <Spinner emphasized show={loading}/>
                 {models && <Container mt={'2em'}>
                         {Object.entries(models).reverse().map(([key, model], idx) => {
+                            console.log(model);
                             
                             const owner = key.split('/')[0];
                             const repo = key.split('/')[1];

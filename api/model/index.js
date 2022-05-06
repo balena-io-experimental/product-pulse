@@ -4,8 +4,6 @@ const maintenance = require('./maintenance');
 const direction = require('./direction');
 const community = require ('./community');
 
-const fs = require('fs');
-
 exports.calculate = async (owner, repo) => {
   // Assign consts and thresholds
   const MONTHS = 3;
@@ -115,13 +113,16 @@ exports.calculate = async (owner, repo) => {
     PRs,
     issues,
     maintainers,
+    months: MONTHS,
     cVariables
   });
 
   return {
     legend: [0.2, 0.6, 0.9],
-    maintenance: mData, 
-    direction: dData,
-    community: cData,
+    data: {
+      maintenance: mData, 
+      direction: dData,
+      community: cData,
+    }
   };
 }

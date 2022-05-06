@@ -13,7 +13,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.static(BUILD_DIR));
 
-// const { sampleResponse } = require('./sample-api-response');
+// TODO: This is cached forever for the demo but we should 
+// implement something more sophisticated later
+const memo = {};
 
 app.get('/pulse/:org/:repo', async (req, res) => {
   const { org, repo } = req.params;
@@ -21,8 +23,18 @@ app.get('/pulse/:org/:repo', async (req, res) => {
     if (!(await github.isAccessibleRepo(org, repo))) {
       return res.status(400).send('Not a valid repo or is not accessible');
     }
+    // If memo, send memo. This doesn't invalidate so it won't work for an
+    // actual production version of this app.
+    const orgRepoString = `${org}/${repo}`;
+    if (memo[orgRepoString]) {
+      return res.status(200).json(memo[orgRepoString]);
+    }
     const data = await model.calculate(org, repo);
-    return res.status(200).send(data);
+
+    console.log({ org, repo, data });
+    // Memoize to prevent hitting rate limits
+    memo[orgRepoString] = data;
+    return res.status(200).json(data);
   } catch (e) {
     return res.status(500).send(`Error - ${e}`);
   }
