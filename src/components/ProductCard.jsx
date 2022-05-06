@@ -1,10 +1,9 @@
 import React from 'react';
-import { Box, Button, Card, Divider, Flex, Heading, Txt } from 'rendition';
+import { Box, Button, Divider, Flex, Heading, Txt } from 'rendition';
 
 import { AiFillGithub, AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
-import { Accordion, AccordionPanel, grommet } from 'grommet';
-import styled, { ThemeProvider } from 'styled-components';
-import { deepMerge } from 'grommet/utils';
+import { Accordion, AccordionPanel } from 'grommet';
+import { ThemeProvider } from 'styled-components';
 
 /**
  * Map string color into hex

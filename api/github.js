@@ -90,8 +90,7 @@ exports.getIssues = async (owner, repo, monthRange, queryExtra) => {
   try {
     const queryBase = `type:issue repo:${owner}/${repo} updated:>=${date}`;
     return await octokit.paginate(octokit.search.issuesAndPullRequests, {
-      q: `${queryBase}${queryExtra ? ' ' : ''}${queryExtra}`,
-      sort: 'updated',
+      q: `${queryBase}${queryExtra ? ` ${queryExtra}` : ''}`,
       per_page: 100
     });
   } catch (e) {
@@ -100,14 +99,12 @@ exports.getIssues = async (owner, repo, monthRange, queryExtra) => {
   }
 }
 
-exports.getPRs = async (owner, repo, monthRange) => {
-    const since = utils.getNMonthsAgo(monthRange).toISOString();
+exports.getPRs = async (owner, repo, monthRange, queryExtra) => {
+    const date = utils.toGitHubQueryDate(utils.getNMonthsAgo(monthRange));
     try {
-        return await octokit.paginate(octokit.pulls.list, {
-            owner,
-            repo,
-            since,
-            sort: 'updated',
+        const queryBase = `is:pr repo:${owner}/${repo} updated:>=${date}`;
+        return await octokit.paginate(octokit.search.issuesAndPullRequests, {
+            q: `${queryBase}${queryExtra ? ` ${queryExtra}` : ''}`,
             per_page: 100
         });
     } catch (e) {

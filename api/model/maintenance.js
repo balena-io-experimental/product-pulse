@@ -7,9 +7,9 @@ function criterion1(commits, w) {
 }
 
 function criterion2(issues) {
-  const open = issues.filter(i => i.state === 'open')
-  const closed = issues.filter(i => i.state === 'closed')
-  return utils.roundFloat(open + closed / open);
+  const openCount = issues.filter(i => i.state === 'open').length;
+  const closedCount = issues.filter(i => i.state === 'closed').length;
+  return utils.roundFloat(openCount / (closedCount + openCount));
 }
 
 function criterion3(issues) {
@@ -29,75 +29,86 @@ exports.get = async ({
   commits, 
   issues, 
   maintainerCommentedIssues, 
-  archMdExists, 
+  archMdExists,
+  months,
   mVariables: m
 }) => {
   // Has had X commits in W weeks
   const c1 = (x, w) => {
-    const score = criterion1(commits, w);
+    const numCommits = criterion1(commits, w);
+    const pass = numCommits >= x;
     return {
       criterion: 'activity',
-      description: `Has had ${x} commits in the last ${w} weeks`,
-      score,
+      description: `Has had ${x} commit(s) in last ${w} weeks`,
+      value: numCommits,
+      score: Number(pass),
       weight: m.weights.c1,
-      pass: score > x
+      pass
     };
   };
 
   const c2 = (x) => {
-    const score = criterion2(issues);
+    const percentOpen = criterion2(issues);
+    const pass = percentOpen <= x;
     return {
       criterion: 'issues',
-      description: `Open to close issue ration is less than ${x}`,
-      score,
+      description: `Percentage of issues that are open is less than ${x*100}% in last ${months} months`,
+      value: percentOpen,
+      score: percentOpen,
       weight: m.weights.c2,
-      pass: score < x
+      pass
     };
   };
 
   const c3 = (x) => {
-    const score = criterion3(issues);
+    const percentLabelled = criterion3(issues);
+    const pass = percentLabelled >= x;
     return {
       criterion: 'organization',
-      description: `${Math.round(x*100)}% of issues have labels`,
-      score,
+      description: `${Math.round(x*100)}% of issues have labels in last ${months} months`,
+      value: percentLabelled,
+      score: percentLabelled,
       weight: m.weights.c3,
-      pass: score > x
+      pass
     };
   };
 
   const c4 = (x) => {
     const score = criterion4(maintainerCommentedIssues, issues);
+    const pass = score >= x;
     return {
       criterion: 'communication',
-      description: `${x*100} of issues have responses from maintainers`,
-      score,
+      description: `${x*100}% of issues have responses from maintainers in last ${months} months`,
+      value: score,
+      score: Number(pass),
       weight: m.weights.c4,
-      pass: score > x
+      pass
     };
   };
 
   const c5 = () => {
-    const score = criterion5(archMdExists);
+    const exists = criterion5(archMdExists);
+    const pass = exists === 1;
     return {
       criterion: 'architecture',
       description: `Contains an ARCHITECTURE.md`,
-      score,
+      value: exists,
+      score: exists,
       weight: m.weights.c5,
-      pass: score === 1
+      pass
     };
   };
 
   const details = [
     c1(...m.x.NUM_COMMITS_IN_WEEKS),
-    c2(m.x.PERCENT_OPEN_TO_CLOSED_ISSUES),
+    c2(m.x.PERCENT_OPEN_ISSUES),
     c3(m.x.PERCENT_ISSUES_WITH_LABEL),
     c4(m.x.PERCENT_ISSUES_WITH_RESPONSE),
     c5()
   ];
 
   return {
-    score: details.map(c => c.score * c.weight).reduce((total, v) => total + v, 0),
+    score: utils.roundFloat(details.map(c => c.score * c.weight).reduce((total, v) => total + v, 0)),
     details
   };
 }

@@ -7,13 +7,13 @@ const criteria1 = (stars) => stars;
 const criteria2 = (forks) => forks;
 
 // Criterion 3 (high): X% commits / PRs for past W weeks NOT in core contributors
+// TODO: This changes when you change the x value for it, so something may be off
 const criteria3 = (commits, PRs, maintainers) => {
-    const notTopContributor = (({ author: { login }}) => !maintainers.includes(login));
-    const numPRsNotByMaintainers = PRs.filter(notTopContributor).length;
-    const numCommitsNotByMaintainers = commits.filter(notTopContributor).length;
+    const numPRsNotByMaintainers = PRs.filter(({ user: { login }}) => !maintainers.includes(login)).length;
+    const numCommitsNotByMaintainers = commits.filter(({ author: { login }}) => !maintainers.includes(login)).length;
     
     const percentPRs = utils.percentage(numPRsNotByMaintainers, PRs.length);
-    const percentCommits = utils.percentage(numCommitsNotByMaintainers, commits.length);  
+    const percentCommits = utils.percentage(numCommitsNotByMaintainers, commits.length);
 
     const score = utils.roundFloat(utils.average(percentPRs, percentCommits)); 
     return score;
@@ -31,51 +31,60 @@ exports.get = async ({
     commits, 
     PRs, 
     issues, 
-    maintainers, 
+    maintainers,
+    months, 
     cVariables: c
 }) => {
     // Process data
     const c1 = (x) => {
-        const score = criteria1(repo.stargazers_count);
+        const stars = criteria1(repo.stargazers_count);
+        const pass = stars >= x;
         return {
             criterion: 'sentiment',
             description: `Has at least ${x} stars`,
-            score,
+            value: stars,
+            score: Number(pass),
             weight: c.weights.c1,
-            pass: score >= x
+            pass
         }
     }
 
     const c2 = (x) => {
-        const score = criteria2(repo.forks_count);
+        const forks = criteria2(repo.forks_count);
+        const pass = forks >= x;
         return {
             criterion: '3rd party development',
             description: `Has at least ${x} forks`,
-            score,
+            value: forks,
+            score: Number(pass),
             weight: c.weights.c2,
-            pass: score >= x
+            pass
         }
     }
 
     const c3 = (x) => {
-        const score = criteria3(commits, PRs, maintainers);
+        const percentCommitsNotByCore = criteria3(commits, PRs, maintainers);
+        const pass = percentCommitsNotByCore >= x;
         return {
             criterion: 'contributions',
-            description: `${Math.round(x*100)}% of commits created by users not in core contributors recently`,
-            score,
+            description: `${Math.round(x*100)}% of commits and PRs created by users not in core contributors in last ${months} months`,
+            value: percentCommitsNotByCore,
+            score: percentCommitsNotByCore,
             weight: c.weights.c3,
-            pass: score >= x
+            pass
         }
     }
 
     const c4 = (x) => {
-        const score = criteria4(issues, maintainers);
+        const percentIssuesNotByCore = criteria4(issues, maintainers);
+        const pass = percentIssuesNotByCore >= x;
         return {
             criterion: 'engagement',
-            description: `${Math.round(x*100)}% of issues created by users not in core contributors recently`,
-            score,
+            description: `${Math.round(x*100)}% of issues created by users not in core contributors in last ${months} months`,
+            value: percentIssuesNotByCore,
+            score: percentIssuesNotByCore,
             weight: c.weights.c4,
-            pass: score >= x
+            pass
         }
     }
 
@@ -87,7 +96,7 @@ exports.get = async ({
     ];
 
     return {
-        score: details.map(c => c.score * c.weight).reduce((total, v) => total + v, 0),
+        score: utils.roundFloat(details.map(c => c.score * c.weight).reduce((total, v) => total + v, 0)),
         details
     };
 }
