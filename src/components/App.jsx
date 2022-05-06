@@ -44,7 +44,7 @@ const App = () => {
      */
     const fetchModel = async(URI) => {
         const [owner, repo] = getOwnerAndRepo(URI);
-        const resp = await fetch(`http://localhost:3000/pulse/${owner}/${repo}`);
+        const resp = await fetch(`/pulse/${owner}/${repo}`);
         const body = await resp.text();
         if(!resp.ok) {
             throw new Error(body);
