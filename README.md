@@ -105,11 +105,7 @@ Please see our [documentation](/docs) for more details on our roadmap.
 
 ## Documentation
 
-Please see our documentation for more on:
-
-* [the Product Pulse data model and examples of interpreters](/docs/data-model)
-* [scoring and criteria definitions](/docs/github-interpreter)
-* [roadmap](/docs/roadmap)
+Please see our [documentation](/docs) for more information and guidance.
 
 ## Contributing
 
