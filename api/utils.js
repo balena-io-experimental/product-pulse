@@ -67,6 +67,7 @@ exports.getCoreContributors = (commits) => {
 }
 
 const FLOAT_DECIMAL_PLACES = 3;
-exports.roundFloat = (float) => parseFloat(float.toFixed(FLOAT_DECIMAL_PLACES));
+const roundFloat = (float) => parseFloat(float.toFixed(FLOAT_DECIMAL_PLACES));
+exports.roundFloat = roundFloat;
 exports.percentage = (num1, num2) => roundFloat(num1 / num2);
 exports.average = (num1, num2) => (num1 + num2) / 2;
