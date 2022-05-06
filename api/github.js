@@ -115,3 +115,16 @@ exports.getPRs = async (owner, repo, monthRange) => {
         throw e;
     }
 }
+
+exports.getFileSize = async (owner, repo, filePath) => {
+  try {
+    const {data} =  await octokit.repos.getContent({owner, repo, path: filePath}); 
+    return data.size;
+  } catch (e) {
+    if (e.status === 404) {
+      return 0;
+    }
+    console.error('Received error in getFileSize: ', e);
+    throw e;
+  }
+}
