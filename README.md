@@ -109,7 +109,13 @@ Please see our [documentation](/docs) for more information and guidance.
 
 ## Contributing
 
-The best way to contribute to Product Pulse is to test it out by inputting your product repos into it and letting us know what you think.
+The best way to contribute to Product Pulse is to test it out by inputting your product repos into it and letting us know what you think. Other than testing it out, we'd appreciate adding more interpreters into the mix. We started out with just GitHub, but welcome modeling and thoughts for:
+* GitLab
+* BitBucket
+* GitTea
+* Asana
+* Monday
+* ...and more
 
 ## License
 
