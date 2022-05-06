@@ -1,5 +1,4 @@
-const github = require('./github');
-
+const github = require('../github');
 
 const criterion1 = (contributingDocExists) => contributingDocExists;
 
@@ -10,7 +9,7 @@ const criterion4 = (issues, x) => {
 exports.get = async (owner, repo) => {
   const MONTHS = 3;
   const issues = await github.getIssues(owner, repo, MONTHS);
-  const contributingDocExists = await github.fileExists(owner, repo, 'CONTRIBUTING.md');
+  const contributingDocExists = await github.getFileSize(owner, repo, 'CONTRIBUTING.md') > 0;
 
 // Has had X commits in W weeks
   const c1 = () => {
