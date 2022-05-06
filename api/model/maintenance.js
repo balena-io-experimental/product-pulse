@@ -17,7 +17,7 @@ function criterion3(issues) {
   return utils.roundFloat(hasLabels.length / issues.length);
 }
 
-async function criterion4(maintainerCommented, issues) {
+function criterion4(maintainerCommented, issues) {
   return utils.roundFloat(maintainerCommented.length / issues.length); 
 }
 
@@ -60,8 +60,8 @@ exports.get = async ({ commits, issues, maintainerCommentedIssues, archMdExists,
     };
   };
 
-  const c4 = async (x) => {
-    const score = await criterion4(maintainerCommentedIssues, issues);
+  const c4 = (x) => {
+    const score = criterion4(maintainerCommentedIssues, issues);
     return {
       criterion: 'communication',
       description: `${x*100} of issues have responses from maintainers`,
@@ -86,7 +86,7 @@ exports.get = async ({ commits, issues, maintainerCommentedIssues, archMdExists,
     c1(...mX.COMMITS_IN_WEEKS),
     c2(mX.OPEN_TO_CLOSED_ISSUES),
     c3(mX.ISSUES_WITH_LABELS),
-    await c4(mX.ISSUES_WITH_RESPONSE),
+    c4(mX.ISSUES_WITH_RESPONSE),
     c5()
   ];
 
