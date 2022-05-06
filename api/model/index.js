@@ -76,7 +76,7 @@ exports.calculate = async (owner, repo) => {
     f.push(`commenter:${m}`);
     return f;
   }, []).join(' ');
-  const maintainerCommentedIssues = [] || await github.getIssues(owner, repo, MONTHS, commentedQuery);
+  const maintainerCommentedIssues = await github.getIssues(owner, repo, MONTHS, commentedQuery);
   const archMdExists = (await github.getFileSize(owner, repo, 'ARCHITECTURE.md')) > 0;
 
   // Data needed for direction
@@ -85,7 +85,7 @@ exports.calculate = async (owner, repo) => {
     f.push(`involves:${m}`);
     return f;
   }, []).join(' ');
-  const maintainerCommentedReviewedPRs = [] || await github.getPRs(owner, repo, MONTHS, involvesQuery);
+  const maintainerCommentedReviewedPRs = await github.getPRs(owner, repo, MONTHS, involvesQuery);
 
   // Apply individual algorithms
   const mData = await maintenance.get({ 

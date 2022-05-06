@@ -99,7 +99,7 @@ exports.sampleResponse = {
           pass: true,
         },
         {
-          criterion: "3rd party development",
+          criterion: "development",
           description: "Has at least 5 forks",
           value: 57,
           score: 1,

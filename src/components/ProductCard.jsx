@@ -1,9 +1,10 @@
 import React from 'react';
 import { Box, Button, Divider, Flex, Heading, Txt } from 'rendition';
-
-import { AiFillGithub, AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
 import { Accordion, AccordionPanel } from 'grommet';
+import { AiFillGithub, AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
 import { ThemeProvider } from 'styled-components';
+
+import { toTitleCase } from '../utils';
 
 /**
  * Map string color into hex
@@ -45,6 +46,29 @@ const generalStatusColor = (colors) => {
   }
 };
 
+const theme = {
+  accordion: {
+    heading: {
+      level: 3,
+      margin: { vertical: '6px', horizontal: '24px' },
+    },
+    hover: {
+      heading: {
+        color: 'accent-2',
+      },
+    },
+    icons: {
+      collapse: undefined,
+      expand: undefined,
+      color: 'transparent',
+    },
+    border: undefined,
+    panel: {
+      border: undefined,
+    },
+  }
+};
+
 const cardStyle = {
   border: '1px solid rgba(0, 0, 0, 0.07)',
   padding: '20px',
@@ -63,11 +87,12 @@ const RoundButton = ({ color }) => (
 );
 
 const StatusBadge = ({ text, color }) => (
-  <>
-    <RoundButton color={mapColor(color)}></RoundButton>
-    <Box style={{ width: 5 }}></Box>
-    <Txt>{text}</Txt>
-  </>
+  <Box width={'30%'}>
+    <Flex flexDirection={'row'}>
+      <RoundButton color={mapColor(color)} />
+      <Txt ml={'5px'}>{toTitleCase(text)}</Txt>
+    </Flex>
+  </Box>
 );
 
 const CloseButton = ({ onClose }) => (
@@ -86,9 +111,9 @@ const CardHeader = ({ title, onClose }) => (
   </>
 );
 
-const CardFooter = ({ repoHandler }) => (
+const CardFooter = ({ repoHandle }) => (
   <Box
-    onClick={() => window.open(`https://github.com/${repoHandler}`)}
+    onClick={() => window.open(`https://github.com/${repoHandle}`)}
     style={{
       border: '1px solid rgba(0, 0, 0, 0.07)',
       backgroundColor: 'rgba(239,239,239,255)',
@@ -101,7 +126,7 @@ const CardFooter = ({ repoHandler }) => (
   >
     <Flex>
       <AiFillGithub size={20} style={{ paddingLeft: 10, paddingRight: 5 }} />
-      <Txt>{repoHandler}</Txt>
+      <Txt>{repoHandle}</Txt>
     </Flex>
   </Box>
 );
@@ -118,93 +143,85 @@ const CardTopDetail = ({ color }) => (
   />
 );
 
-const Checks = ({ criterias }) => (
-  <Flex flexDirection='column'>
-    {Object.keys(criterias).map((key) => (
-      <Flex key={key}>
-        {criterias[key] ? (
-          <AiOutlineCheck color='green' />
-        ) : (
-          <AiOutlineClose color='red' />
-        )}
-        <Txt>{key}</Txt>
-      </Flex>
-    ))}
+const Checks = ({ data }) => (
+  <Flex flexDirection='column' width={'30%'} pl={'0.5em'}>
+    {
+      data.map((item, idx) => (
+        <Flex key={idx} my={'0.1em'}>
+          {
+            item.pass ?
+              <AiOutlineCheck color={'green'} /> :
+              <AiOutlineClose color={'red'} />
+          }
+          <Txt pl={'0.1em'}>{item.criterion}</Txt>
+        </Flex>
+      ))
+    }
   </Flex>
 );
 
-const renderPanel = (direction, maintenance, community) => (
-  <Flex>
-    <StatusBadge text='Direction' color={direction}></StatusBadge>
-    <Box style={{ width: 90 }} />
-    <StatusBadge text='Maintenance' color={maintenance}></StatusBadge>
-    <Box style={{ width: 90 }} />
-    <StatusBadge text='Community' color={community}></StatusBadge>
+const renderPanel = (colorsByCategory) => (
+  <Flex width={'100%'} justifyContent={'space-around'} mt={'0.5em'}>
+    {
+      Object.keys(colorsByCategory).map((category, idx) => (
+        <StatusBadge
+          key={idx}
+          text={category} 
+          color={colorsByCategory[category].color}
+        />
+      ))
+    }
   </Flex>
 );
 
-const ProductCard = ({ owner, repo, model, onClose }) => {
-  const { direction, maintenance, community } = model;
-
-  const theme = {
-    accordion: {
-      heading: {
-        level: 3,
-        margin: { vertical: '6px', horizontal: '24px' },
-      },
-      hover: {
-        heading: {
-          color: 'accent-2',
-        },
-      },
-      icons: {
-        collapse: undefined,
-        expand: undefined,
-        color: 'transparent',
-      },
-      border: undefined,
-      panel: {
-        border: undefined,
-      },
-    },
-  };
+const ProductCard = ({ owner, repo, model, onClose, setActiveCard }) => {
+  const colorsByCategory = Object.keys(model).reduce((map, category) => {
+    map[category] = { 
+      color: model[category].color, 
+      score: model[category].score
+    };
+    return map;
+  }, {});
+  const ownerRepo= `${owner}/${repo}`;
 
   return (
     <Flex flexDirection='column'>
       <CardTopDetail
-        color={generalStatusColor([direction, maintenance, community])}
+        color={generalStatusColor(Object.values(colorsByCategory))}
       />
-
       <Box width={500} fontSize={2} style={cardStyle}>
-        <CardHeader title={repo} onClose={onClose} />
+        <CardHeader 
+          title={repo} 
+          onClose={onClose}
+        />
         <Accordion>
           <ThemeProvider theme={theme}>
             <AccordionPanel
-              header={renderPanel(direction, maintenance, community)}
+              header={renderPanel(colorsByCategory)}
+              onClick={() => setActiveCard(ownerRepo)}
             >
-              <Flex flexDirection='row' style={{ margin: 15 }}>
-                <Checks
-                  criterias={{
-                    contributors: false,
-                    reviewers: false,
-                    issues: true,
-                    commits: false,
-                  }}
-                />
-                <Box style={{ width: 90 }} />
-                <Checks criterias={{ prs: true, tests: false, build: true }} />
-                <Box style={{ width: 140 }} />
-                <Checks
-                  criterias={{ forks: true, active: false, stars: true }}
-                />
+              <Flex 
+                width={'100%'} 
+                justifyContent={'space-around'}
+                mt={'0.75em'}
+              >
+                {
+                  Object.values(model).map(({ details }, idx) => (
+                    <Checks 
+                      key={idx} 
+                      data={details}
+                    />
+                  ))
+                }
               </Flex>
             </AccordionPanel>
           </ThemeProvider>
         </Accordion>
       </Box>
-      <CardFooter repoHandler={`${owner}/${repo}`} />
+      <CardFooter repoHandle={ownerRepo} />
     </Flex>
   );
-};
+}
+
 
 export default ProductCard;

@@ -53,7 +53,7 @@ exports.get = async ({
         const forks = criteria2(repo.forks_count);
         const pass = forks >= x;
         return {
-            criterion: '3rd party development',
+            criterion: 'development',
             description: `Has at least ${x} forks`,
             value: forks,
             score: Number(pass),
