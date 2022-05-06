@@ -26,7 +26,14 @@ const criteria4 = (issues, maintainers) => {
     return score;
 }
 
-exports.get = async ({ repo, commits, PRs, issues, maintainers, cX }) => {
+exports.get = async ({ 
+    repo, 
+    commits, 
+    PRs, 
+    issues, 
+    maintainers, 
+    cVariables: c
+}) => {
     // Process data
     const c1 = (x) => {
         const score = criteria1(repo.stargazers_count);
@@ -34,7 +41,7 @@ exports.get = async ({ repo, commits, PRs, issues, maintainers, cX }) => {
             criterion: 'sentiment',
             description: `Has at least ${x} stars`,
             score,
-            weight: 0.25,
+            weight: c.weights.c1,
             pass: score >= x
         }
     }
@@ -45,7 +52,7 @@ exports.get = async ({ repo, commits, PRs, issues, maintainers, cX }) => {
             criterion: '3rd party development',
             description: `Has at least ${x} forks`,
             score,
-            weight: 0.25,
+            weight: c.weights.c2,
             pass: score >= x
         }
     }
@@ -56,7 +63,7 @@ exports.get = async ({ repo, commits, PRs, issues, maintainers, cX }) => {
             criterion: 'contributions',
             description: `${Math.round(x*100)}% of commits created by users not in core contributors recently`,
             score,
-            weight: 0.25,
+            weight: c.weights.c3,
             pass: score >= x
         }
     }
@@ -67,16 +74,16 @@ exports.get = async ({ repo, commits, PRs, issues, maintainers, cX }) => {
             criterion: 'engagement',
             description: `${Math.round(x*100)}% of issues created by users not in core contributors recently`,
             score,
-            weight: 0.25,
+            weight: c.weights.c4,
             pass: score >= x
         }
     }
 
     const details = [
-        c1(cX.MIN_STARS),
-        c2(cX.MIN_FORKS),
-        c3(cX.EXTERNAL_COMMIT_PR_THRESHOLD),
-        c4(cX.EXTERNAL_ISSUE_THRESHOLD)
+        c1(c.x.MIN_STARS),
+        c2(c.x.MIN_FORKS),
+        c3(c.x.PERCENT_EXTERNAL_COMMITS_PRS),
+        c4(c.x.PERCENT_EXTERNAL_ISSUES)
     ];
 
     return {

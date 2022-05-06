@@ -25,7 +25,13 @@ function criterion5(architecureDocExists) {
   return architecureDocExists ? 1 : 0;
 }
 
-exports.get = async ({ commits, issues, maintainerCommentedIssues, archMdExists, mX }) => {
+exports.get = async ({ 
+  commits, 
+  issues, 
+  maintainerCommentedIssues, 
+  archMdExists, 
+  mVariables: m
+}) => {
   // Has had X commits in W weeks
   const c1 = (x, w) => {
     const score = criterion1(commits, w);
@@ -33,7 +39,7 @@ exports.get = async ({ commits, issues, maintainerCommentedIssues, archMdExists,
       criterion: 'activity',
       description: `Has had ${x} commits in the last ${w} weeks`,
       score,
-      weight: 0.2,
+      weight: m.weights.c1,
       pass: score > x
     };
   };
@@ -44,7 +50,7 @@ exports.get = async ({ commits, issues, maintainerCommentedIssues, archMdExists,
       criterion: 'issues',
       description: `Open to close issue ration is less than ${x}`,
       score,
-      weight: 0.2,
+      weight: m.weights.c2,
       pass: score < x
     };
   };
@@ -55,7 +61,7 @@ exports.get = async ({ commits, issues, maintainerCommentedIssues, archMdExists,
       criterion: 'organization',
       description: `${Math.round(x*100)}% of issues have labels`,
       score,
-      weight: 0.2,
+      weight: m.weights.c3,
       pass: score > x
     };
   };
@@ -66,7 +72,7 @@ exports.get = async ({ commits, issues, maintainerCommentedIssues, archMdExists,
       criterion: 'communication',
       description: `${x*100} of issues have responses from maintainers`,
       score,
-      weight: 0.2,
+      weight: m.weights.c4,
       pass: score > x
     };
   };
@@ -77,16 +83,16 @@ exports.get = async ({ commits, issues, maintainerCommentedIssues, archMdExists,
       criterion: 'architecture',
       description: `Contains an ARCHITECTURE.md`,
       score,
-      weight: 0.2,
+      weight: m.weights.c5,
       pass: score === 1
     };
   };
 
   const details = [
-    c1(...mX.COMMITS_IN_WEEKS),
-    c2(mX.OPEN_TO_CLOSED_ISSUES),
-    c3(mX.ISSUES_WITH_LABELS),
-    c4(mX.ISSUES_WITH_RESPONSE),
+    c1(...m.x.NUM_COMMITS_IN_WEEKS),
+    c2(m.x.PERCENT_OPEN_TO_CLOSED_ISSUES),
+    c3(m.x.PERCENT_ISSUES_WITH_LABEL),
+    c4(m.x.PERCENT_ISSUES_WITH_RESPONSE),
     c5()
   ];
 
