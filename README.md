@@ -18,33 +18,7 @@ Our amazing team created Product Pulse as part of Hack Week May 2022 to help fel
 
 This can ease the way in which we identify which products are doing well, and which products might need some help. The sooner we can identify products that need help, the sooner we can reduce friction and burnout from the challenges involved in maintaining products.
 
-### Usage and configuration
-
-![Image of tool](/docs/assets/example.png)
-
-Users can input their public GitHub repo into Product Pulse and get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
-
-### Who should use Product Pulse?
-
-**Developers and engineers** can get a high-level look at commit, issue, and PR progress and velocity. They can also get a sense of whether they're growing community around their product.
-
-**Operators and product managers** can use scoring to understand how quickly commits and issues are being made and tracked. They can map community signals to their community score to have a quick way of seeing what kind of engagement is happening.
-
-**Project managers and administrators** can map their tool's progress and user data to their own interpreter to determine project progress and community growth beyond code contribution (e.g. milestone completion, project completion signals from tools like Asana or Monday).
-
-**Directors and leaders** can put multiple product cards into a dashboard to see all products and their health scores from one view. **(Not in Hack Week MVP-- on roadmap...)**
-
-**The initial GitHub interpretation of this product uses repo activity to determine product and repo health.**
-
-We gauge product health by:
-
-* **Direction** - Are there owners and leaders of this product directing the work toward successful outcomes?
-* **Maintenance** - Are commits, issues, and PRs being created, reviewed, and closed to help maintain product health?
-* **Community** - Are there external contributors and metrics indicating that the product is growing and supporting its community?
-
-This is all up for improvement as more people use this hack week project.
-
-### The model
+## The model
 Here's a high-level look at our data model for Product Pulse. We made these criteria as generic as possible so that a user could see how to connect each criteria to relevant data that will come from their product repo or project tracking tool.
 
 **Direction**
@@ -66,7 +40,28 @@ Here's a high-level look at our data model for Product Pulse. We made these crit
 * Criterion 3 (high): Has 3rd party contributions
 * Criterion 4 (high): Has users
 
-### GitHub Interpreter
+## Who should use Product Pulse?
+
+**Developers and engineers** can get a high-level look at commit, issue, and PR progress and velocity. They can also get a sense of whether they're growing community around their product.
+
+**Operators and product managers** can use scoring to understand how quickly commits and issues are being made and tracked. They can map community signals to their community score to have a quick way of seeing what kind of engagement is happening.
+
+**Project managers and administrators** can map their tool's progress and user data to their own interpreter to determine project progress and community growth beyond code contribution (e.g. milestone completion, project completion signals from tools like Asana or Monday).
+
+**Directors and leaders** can put multiple product cards into a dashboard to see all products and their health scores from one view. **(Not in Hack Week MVP-- on roadmap...)**
+
+**The initial GitHub interpretation of this product uses repo activity to determine product and repo health.**
+
+We gauge product health by:
+
+* **Direction** - Are there owners and leaders of this product directing the work toward successful outcomes?
+* **Maintenance** - Are commits, issues, and PRs being created, reviewed, and closed to help maintain product health?
+* **Community** - Are there external contributors and metrics indicating that the product is growing and supporting its community?
+
+This is all up for improvement as more people use this hack week project.
+
+
+## GitHub Interpreter
 For our GitHub Interpreter, we took the model and applied repo and user data sourced by the GitHub API. This is how each criteria will use data and determine health scores.
 
 `$U = user where contributions in $C commits for $W weeks is > $P% of total contributions`
@@ -93,6 +88,12 @@ For our GitHub Interpreter, we took the model and applied repo and user data sou
 * Criterion 4: Repo used by is greater than $X
 
 Get more detail about the modeling, criteria, and our GitHub interpreter in our [documentation](/docs).
+
+### Demo 
+
+![Image of tool](/docs/assets/example.png)
+
+Users can input their public GitHub repo into Product Pulse and get their scores. Product managers can visualize multiple product cards to keep tabs on the health of products and their dependencies.
 
 ## Future state / roadmap
 
