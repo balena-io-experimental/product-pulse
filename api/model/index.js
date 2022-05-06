@@ -53,17 +53,17 @@ exports.calculate = async (owner, repo) => {
   };
 
   // Collect data once for all the algorithms
-  // const repoData = await github.getRepo(owner, repo);
-  const repoData = JSON.parse(await fs.promises.readFile('./sample-repo-data.json', 'utf-8'));
+  const repoData = await github.getRepo(owner, repo);
+  //const repoData = JSON.parse(await fs.promises.readFile('./sample-repo-data.json', 'utf-8'));
   
-  // const rawCommits = await github.getCommits(owner, repo, MONTHS);
-  const rawCommits = JSON.parse(await fs.promises.readFile('./sample-raw-commits.json', 'utf-8'));
+  const rawCommits = await github.getCommits(owner, repo, MONTHS);
+  // const rawCommits = JSON.parse(await fs.promises.readFile('./sample-raw-commits.json', 'utf-8'));
   
-  // const rawIssues = await github.getIssues(owner, repo, MONTHS);
-  const rawIssues = JSON.parse(await fs.promises.readFile('./sample-raw-issues.json', 'utf-8'));
+  const rawIssues = await github.getIssues(owner, repo, MONTHS);
+  // const rawIssues = JSON.parse(await fs.promises.readFile('./sample-raw-issues.json', 'utf-8'));
 
-  // const rawPRs = await github.getPRs(owner, repo, MONTHS);
-  const rawPRs = JSON.parse(await fs.promises.readFile('./sample-raw-prs.json', 'utf-8'));
+  const rawPRs = await github.getPRs(owner, repo, MONTHS);
+  // const rawPRs = JSON.parse(await fs.promises.readFile('./sample-raw-prs.json', 'utf-8'));
   
   // Filter out bots
   // TODO: deduplicate
@@ -98,7 +98,6 @@ exports.calculate = async (owner, repo) => {
     months: MONTHS,
     mVariables
   });
-  // return JSON.stringify(mData, null, 2);
 
   const dData = await direction.get({
     issues,
@@ -109,7 +108,6 @@ exports.calculate = async (owner, repo) => {
     commits,
     dVariables
   });
-  // return JSON.stringify(dData, null, 2);
   
   const cData = await community.get({
     repo: repoData,
@@ -119,7 +117,6 @@ exports.calculate = async (owner, repo) => {
     maintainers,
     cVariables
   });
-  return JSON.stringify(cData, null, 2);
 
   return {
     legend: [0.2, 0.6, 0.9],
